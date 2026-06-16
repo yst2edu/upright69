@@ -74,8 +74,8 @@
   @media(max-width:560px){ .activity-grid { grid-template-columns:1fr; } }
   .activity-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 18px 18px 22px; border-left:4px solid var(--gold); cursor:pointer; transition:all .2s; position:relative; }
   .activity-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-left-color:var(--navy); }
-  .activity-card .act-icon { font-size:26px; margin-bottom:8px; }
-  .activity-card .act-title { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:4px; line-height:1.4; }
+  .activity-card .act-icon { font-size:30px; margin-bottom:10px; }
+  .activity-card .act-title { font-size:16px; font-weight:800; color:var(--navy); margin-bottom:4px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .activity-card .act-sub { font-size:12px; color:var(--slate-light); }
   .status-dot { position:absolute; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background:#D1D9E0; }
   .status-dot.done { background:var(--green); }
@@ -387,10 +387,10 @@
 const SCHOOLS = {"35020001":"บ้านดงมะไฟ","35020002":"บ้านคำครตา","35020003":"บ้านโคกก่องดอนนกชุม(อ่างประชานุกูล)","35020004":"บ้านกุดกว้าง","35020005":"บ้านคำแขนศอก","35020006":"บ้านโคกกลางหนองแตะแหละ","35020007":"บ้านหนองลาดควาย","35020008":"บ้านสีสุก","35020009":"บ้านดู่ลาด","35020010":"บ้านโสกผักหวาน","35020011":"บ้านเสาเล้า","35020013":"บ้านทรายมูล(ทรายมูลประชาราษฏร์)","35020014":"ชุมชนบ้านโคกยาว","35020015":"บ้านนาโป่ง","35020016":"บ้านเหล่าเมย","35020017":"บ้านหนองไก่ขาว(ฉวีบรรณสารพิจิตรอุปถัมภ์)","35020018":"บ้านดอนหวาย","35020019":"บ้านนาเวียง","35020020":"บ้านโป่ง(คำประชานุกูล)","35020021":"บ้านหนองแวง","35020022":"บ้านบะคอม","35020023":"บ้านสร้างช้างไผ่หนองไร่มิตรภาพที่ 143","35020024":"บ้านโคกกลาง","35020025":"บ้านนาเรียง","35020026":"ชุมชนบ้านกำแมด","35020027":"บ้านกุดหิน","35020028":"บ้านหนองตาไก้","35020029":"บ้านหนองเหี่ย","35020030":"โรงเรียนบ้านโนนยาง","35020031":"บ้านหัวงัว(อุสุภราชวิทยาคาร)","35020033":"บ้านหนองเมืองกลาง","35020034":"บ้านสองคร","35020036":"บ้านหนองบอน","35020037":"บ้านหนองเรือ","35020038":"บ้านหนองแก","35020039":"อนุบาลกุดชุมพัฒนา(ศรีวิสารรังสรรค์)","35020040":"บ้านเหล่าตำแย","35020041":"บ้านคำน้ำสร้าง","35020042":"บ้านเที่ยงนาเรียง","35020043":"บ้านดงสำราญ","35020044":"บ้านภูถ้ำพระพรเจริญ","35020045":"บ้านนาโส่","35020046":"บ้านโสกท่าลาดพัฒนา","35020047":"บ้านกุดแดง","35020048":"บ้านนาซึม","35020049":"ชุมชนประชาสรรค์","35020050":"ชุมชนบ้านโนนเปือย(มหาพิมพ์สงเคราะห์)","35020051":"บ้านผักกะย่า","35020052":"บ้านหวายกุดสว่าง","35020053":"บ้านสุขเกษม","35020054":"บ้านสุขเกษม(สาขาบ้านคำม่วงไข่)","35020055":"บ้านโพนงามเกี้ยงเก่า","35020056":"บ้านแดงหนองแซง","35020057":"บ้านคำเลา","35020058":"บ้านม่วง","35020059":"บ้านสร้างแต้นาประเสริฐ","35020060":"บ้านนาทม","35020061":"บ้านโคกศรี","35020062":"บ้านหนองหว้า","35020063":"บ้านหนองหมี","35020064":"บ้านกุดไกรสร","35020065":"บ้านคำบอนศรีชุมพล","35020066":"บ้านโพนดินแดง","35020067":"บ้านหนองแหน","35020068":"บ้านคำผักหนาม","35020069":"บ้านโนนประทาย","35020070":"บ้านคำก้าว","35020071":"บ้านโนนใหญ่","35020072":"บ้านหัวนา","35020073":"โรงเรียนบ้านหนองบัวบาน","35020074":"บ้านโสกน้ำขาว","35020075":"บ้านห้วยแก้งหนองศาลา","35020076":"บ้านนิคม","35020077":"บ้านหนองบาก","35020078":"บ้านเชียงเครือคำสร้างบ่อ","35020079":"บ้านโคกพระเจ้าโนนรัง","35020080":"บ้านม่วงไข่","35020081":"บ้านกระจาย","35020082":"บ้านคำเกิด","35020083":"บ้านหนองสำโรง","35020084":"บ้านโคกสะอาดใหม่สามัคคี","35020085":"บ้านนาดี(คุรุประชารัฐ)","35020086":"บ้านดงสวาง","35020087":"บ้านหนองแข้","35020088":"บ้านหนองชุม","35020089":"บ้านโคกกลาง","35020090":"บ้านโคกสุวรรณ","35020091":"บ้านโคกนาโก","35020092":"บ้านคำกลาง","35020093":"บ้านเซซ่งพัฒนา","35020094":"บ้านท่าลาดโนนตูม","35020095":"ชุมชนบ้านเชียงเพ็ง","35020096":"บ้านเซโนนม่วง","35020097":"บ้านกลางสระเกษ","35020098":"อนุบาลป่าติ้ว(โพธาภินันท์นุกูล)","35020099":"บ้านหนองแสงโคกสะอาด","35020100":"บ้านโพธิญาณ","35020101":"บ้านโพธิ์ไทรโพธิ์ศรี","35020102":"บ้านป่าตอง","35020103":"ชุมชนบ้านศรีฐาน","35020104":"บ้านเตาไห","35020105":"บ้านกุดสำโรง","35020106":"บ้านกุดแข้ด่อนหนองบัว","35020107":"บ้านกุดเชียงหมี","35020108":"บ้านกุดขุ่นสวาสดิ์","35020109":"บ้านห้วยยาง","35020110":"บ้านแก้งนาคำ","35020112":"บ้านกุดมะฮงดงสวาง","35020113":"บ้านนาโพธิ์อ่างสร้างหิน","35020114":"บ้านดอนม่วงป่าโมง","35020115":"บ้านมันปลา","35020116":"บ้านกุดแห่","35020117":"บ้านสมสะอาด","35020118":"บ้านคำเกิ่ง","35020119":"กุดคอก่านโคกสำราญโนนสวรรค์","35020120":"บ้านหินสิ่ว","35020121":"บ้านหนองยางห้วยสะแบก","35020122":"บ้านดอนมะซ่อม","35020123":"น้อมเกล้า","35020124":"บ้านหนองแคนน้อย","35020125":"บ้านโคกก่อง","35020126":"บ้านช่องเม็ก","35020127":"บ้านหนองเลิงคำ","35020128":"บ้านบุ่งค้า","35020129":"บ้านป่าขี้ยาง","35020131":"บ้านโคกเจริญ","35020132":"บ้านหนองแคน","35020133":"บ้านศรีแก้ว","35020134":"บ้านโคกใหญ่","35020135":"บ้านศรีสว่าง","35020136":"บ้านแสนสำราญ","35020137":"บ้านสร้างมิ่งมิตรภาพที่ 191","35020138":"บ้านโนนหาด","35020139":"บ้านโคกกอกหินเหล็กไฟ","35020141":"บ้านคึมยาว","35020142":"บ้านท่าลาดเหล่าอาภรณ์","35020143":"บ้านหนองโสน","35020145":"บ้านดอนฮี","35020146":"บ้านม่วงกาชัง","35020147":"บ้านกุดโจด","35020148":"บ้านนาจาน","35020149":"บ้านพรหมนิยม","35020150":"บ้านแยประชาสรรค์","35020151":"บ้านคึมชาดตาดบกศรีสมพร","35020152":"อนุบาลเลิงนกทา","35020153":"บ้านด่าน","35020154":"บ้านโป่งหนองสิม","35020155":"บ้านโคกสะอาดเกษตรพัฒนา","35020156":"บ้านสามัคคี","35020157":"บ้านหวาย","35020158":"บ้านโคกสูงอ่างสมบูรณ์","35020159":"บ้านนาเซแสงวิไล","35020160":"นาจานเจริญวิทย์","35020161":"บ้านป่าชาด","35020162":"บ้านหนองบึง","35020163":"บ้านท่าศิลา","35020165":"ชุมชนห้องแซงวิทยา","35020166":"บ้านห้องแซง","35020167":"บ้านดงยาง(คุรุราษฏร์บำรุง)","35020168":"บ้านห้องคลองร่องคำ","35020169":"บ้านโพง","35020170":"บ้านโนนแดง","35020171":"บ้านคำเตย","35020172":"บ้านหนองซ่งแย้","35020173":"บ้านดงสวรรค์","35020174":"บ้านหนองลุมพุก","35020175":"บ้านหนองสนม","35020176":"บ้านพืชคาม","35020177":"บ้านหนองสองห้องทรัพย์เจริญ","35020178":"บ้านคำไผ่โนนบ้านใหม่","35020179":"บ้านพอกโนนหนองผือคำไผ่ใต้","35020180":"บ้านโสกน้ำใส","35020181":"บ้านหนองนกเขียน","35020182":"บ้านป่าตาว","35020183":"บ้านไทยเจริญ","35020184":"บ้านสามแยกภูกอย","35020185":"บ้านห้วยยาง(คุรุประชาสรรค์)","35020186":"บ้านไทยเจริญ (สาขาบ้านเทพเจริญ)","35020187":"บ้านน้ำคำ","35020188":"บ้านคำสร้างช้าง","35020189":"บ้านโชคชัยพรตาดไฮ","35020190":"บ้านนาเฮืองนางช้างเฒ่า","35020191":"บ้านเหล่าหันทราย","35020192":"บ้านโนนแดงประชานุเคราะห์","35020193":"บ้านส้มผ่อ","35020194":"บ้านนางาม"};
 
 const ACTIVITIES = [
-  {id:'company',      icon:'🏢', title:'บริษัทสร้างการดี',                   hasLevel:false},
-  {id:'lesson_teacher', icon:'👩‍🏫', title:'ถอดบทเรียนครู',                    hasLevel:false},
-  {id:'lesson_director',icon:'👔', title:'ถอดบทเรียนผู้บริหาร',               hasLevel:false},
-  {id:'film',         icon:'🎬', title:'ภาพยนตร์สั้น\nต่อต้านการทุจริต',    hasLevel:true},
+  {id:'company',      icon:'🏢', title:'กิจกรรมบริษัทสร้างการดี',               hasLevel:false},
+  {id:'lesson_teacher', icon:'👩‍🏫', title:'กิจกรรมถอดบทเรียนครู',               hasLevel:false},
+  {id:'lesson_director',icon:'👔', title:'กิจกรรมถอดบทเรียนผู้บริหาร',          hasLevel:false},
+  {id:'film',         icon:'🎬', title:'กิจกรรมสื่อสร้างสรรค์\nภาพยนตร์สั้นต่อต้านการทุจริต', hasLevel:true},
   {id:'photo',        icon:'📷', title:'ประกวดภาพถ่าย\nต่อต้านการทุจริต',   hasLevel:true},
 ];
 
@@ -405,7 +405,7 @@ const FIELD_DEFS = {
     {id:'url3', label:'ลิงก์ภาพยนตร์ YouTube', hint:'วาง URL จาก YouTube', type:'video'},
   ],
   photo: [
-    {id:'title', label:'ชื่อผลงาน', hint:'', type:'text'},
+    {id:'title', label:'ชื่อภาพถ่าย', hint:'', type:'text'},
     {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบเสนอแนวความคิด — และให้แนบไฟล์ภาพต้นฉบับที่ยังไม่ได้แต่งไปด้วย (RAW, JPG หรือ HEIC)', type:'link'},
     {id:'url2', label:'ภาพถ่าย', hint:'ลิงก์ไฟล์รูปภาพจาก Google Drive (แชร์แบบทุกคนมีลิงก์)', type:'photo'},
   ],
@@ -497,7 +497,7 @@ function renderMenu() {
     card.innerHTML = `
       <div class="status-dot ${status==='done'?'done':status==='partial'?'partial':''}"></div>
       <div class="act-icon">${act.icon}</div>
-      <div class="act-title">${act.title.replace('\n','<br>')}</div>
+      <div class="act-title">${act.title.replace('\n',' ')}</div>
       <div class="act-sub">${act.hasLevel?'2 ระดับ • คลิกเพื่อส่ง':'คลิกเพื่อส่ง'}</div>
       ${criteriaBtn}`;
     card.onclick = () => openForm(act);
@@ -808,8 +808,8 @@ function switchAdminTab(tab, btn) {
 
 // ===== ADMIN CONSTANTS (global) =====
 const ACT_KEYS = ['company','lesson_teacher','lesson_director','film_primary','film_secondary','photo_primary','photo_secondary'];
-const ACT_LABELS = {company:'บริษัทฯ',lesson_teacher:'ถอดบทเรียน ครู',lesson_director:'ถอดบทเรียน ผู้บริหาร',film_primary:'ภาพยนตร์ (ประถม)',film_secondary:'ภาพยนตร์ (ม.ต้น)',photo_primary:'ภาพถ่าย (ประถม)',photo_secondary:'ภาพถ่าย (ม.ต้น)'};
-const ACT_KEY_LABELS = {company:'บริษัทสร้างการดี',lesson_teacher:'ถอดบทเรียนครู',lesson_director:'ถอดบทเรียนผู้บริหาร',film_primary:'ภาพยนตร์ (ประถม)',film_secondary:'ภาพยนตร์ (ม.ต้น)',photo_primary:'ภาพถ่าย (ประถม)',photo_secondary:'ภาพถ่าย (ม.ต้น)'};
+const ACT_LABELS = {company:'บริษัทสร้างการดี',lesson_teacher:'ถอดบทเรียน ครู',lesson_director:'ถอดบทเรียน ผู้บริหาร',film_primary:'ภาพยนตร์สั้นฯ (ประถม)',film_secondary:'ภาพยนตร์สั้นฯ (ม.ต้น)',photo_primary:'ภาพถ่าย (ประถม)',photo_secondary:'ภาพถ่าย (ม.ต้น)'};
+const ACT_KEY_LABELS = {company:'กิจกรรมบริษัทสร้างการดี',lesson_teacher:'กิจกรรมถอดบทเรียนครู',lesson_director:'กิจกรรมถอดบทเรียนผู้บริหาร',film_primary:'กิจกรรมสื่อสร้างสรรค์ ภาพยนตร์สั้นฯ (ประถม)',film_secondary:'กิจกรรมสื่อสร้างสรรค์ ภาพยนตร์สั้นฯ (ม.ต้น)',photo_primary:'การประกวดภาพถ่าย (ประถม)',photo_secondary:'การประกวดภาพถ่าย (ม.ต้น)'};
 
 // ===== BY SCHOOL TAB =====
 function renderBySchoolTab() {
@@ -818,8 +818,8 @@ function renderBySchoolTab() {
       <input type="text" placeholder="🔍 ค้นหาชื่อหรือรหัสโรงเรียน..." value="${window.adminSearch}"
         oninput="window.adminSearch=this.value; document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()">
       <div class="view-toggle">
-        <button class="view-btn ${window.adminViewMode==='card'?'active':''}" onclick="window.adminViewMode='card';document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()" title="การ์ด">⊞</button>
-        <button class="view-btn ${window.adminViewMode==='list'?'active':''}" onclick="window.adminViewMode='list';document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()" title="รายการ">☰</button>
+        <button class="view-btn ${window.adminViewMode==='card'?'active':''}" onclick="window.adminViewMode='card';switchAdminTab('byschool',null)" title="การ์ด">⊞</button>
+        <button class="view-btn ${window.adminViewMode==='list'?'active':''}" onclick="window.adminViewMode='list';switchAdminTab('byschool',null)" title="รายการ">☰</button>
       </div>
     </div>
     <div id="schoolListWrap">${renderSchoolRows()}</div>`;
@@ -887,7 +887,7 @@ function renderByActivityTab() {
   ];
   const filterBtns = ACT_OPTIONS.map(o =>
     `<button class="act-filter-btn ${window.adminActFilter===o.key?'active':''}"
-      onclick="window.adminActFilter='${o.key}';document.getElementById('actTableWrap').innerHTML=renderActTable()">${o.label}</button>`
+      onclick="window.adminActFilter='${o.key}';switchAdminTab('byactivity',null)">${o.label}</button>`
   ).join('');
   return `
     <div class="admin-search-bar">
@@ -1167,7 +1167,7 @@ let scoresActFilter = ACT_KEYS[0];
 function renderScoresTab() {
   const filterBtns = ACT_KEYS.map(k =>
     `<button class="act-filter-btn ${scoresActFilter===k?'active':''}"
-      onclick="scoresActFilter='${k}';document.getElementById('scoresContent').innerHTML=renderScoresTable()">${ACT_KEY_LABELS[k]}</button>`
+      onclick="scoresActFilter='${k}';switchAdminTab('scores',null)">${ACT_KEY_LABELS[k]}</button>`
   ).join('');
 
   return `
@@ -1271,8 +1271,7 @@ function renderResultsPage() {
           <div style="font-size:13px;font-weight:700;color:var(--navy)">${r.name}</div>
           ${titleText}
         </div>
-        <div style="font-size:11px;color:var(--slate-light);white-space:nowrap">${reward.replace(/^[^\s]+\s/,'')}</div>
-        <div style="font-size:14px;font-weight:700;color:var(--green);min-width:60px;text-align:right">${r.score} คะแนน</div>
+        <div style="font-size:12px;color:var(--slate-light);white-space:nowrap">${reward.replace(/^[^\s]+\s/,'')}</div>
       </div>`;
     }).join('');
 
