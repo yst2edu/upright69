@@ -1206,10 +1206,11 @@ function renderJudgePage() {
     return;
   }
 
-  const cards = submitted.map(([code, name]) => {
+  const items = submitted.map(([code, name], i) => {
     const sub = all[code][actKey];
     const d = new Date(sub.updatedAt);
     const dateStr = d.toLocaleDateString('th-TH')+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
     let previews = '';
     fields.forEach(f => {
       const url = sub[f.id];
@@ -1226,17 +1227,33 @@ function renderJudgePage() {
         previews += `<a class="ec-link" href="${url}" target="_blank" style="margin-bottom:8px;display:inline-flex">↗ ${f.label}</a><br>`;
       }
     });
-    return `<div class="embed-card" style="margin-bottom:18px">
-      <div style="margin-bottom:12px">
-        <div style="font-size:15px;font-weight:700;color:var(--navy)">${name}</div>
-        <div style="font-size:12px;color:var(--slate-light)">${code} • ส่งเมื่อ ${dateStr}</div>
-      </div>
-      ${previews}
-    </div>`;
+
+    return `
+      <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden">
+        <div onclick="toggleJudgePanel(${i})" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none" onmouseover="this.style.background='#EAF0F8'" onmouseout="this.style.background=''">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy)">${name}</div>
+            <div style="font-size:11px;color:var(--slate-light)">${code} • ส่งเมื่อ ${dateStr}</div>
+          </div>
+          <span id="judgeArrow${i}" style="font-size:18px;color:var(--slate-light);transition:transform .2s">›</span>
+        </div>
+        <div id="judgePanel${i}" style="display:none;padding:0 18px 18px;border-top:1px solid var(--cream-dark)">
+          <div style="padding-top:14px">${previews}</div>
+        </div>
+      </div>`;
   }).join('');
 
   document.getElementById('judgeSchoolList').innerHTML =
-    `<div style="font-size:13px;color:var(--slate-light);margin-bottom:16px">พบ ${submitted.length} โรงเรียน</div>${cards}`;
+    `<div style="font-size:13px;color:var(--slate-light);margin-bottom:12px">พบ ${submitted.length} โรงเรียน • คลิกชื่อเพื่อดูผลงาน</div>${items}`;
+}
+
+function toggleJudgePanel(i) {
+  const panel = document.getElementById('judgePanel' + i);
+  const arrow = document.getElementById('judgeArrow' + i);
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+  arrow.style.color = isOpen ? 'var(--slate-light)' : 'var(--navy)';
 }
 
 // ===== JUDGES ADMIN TAB =====
