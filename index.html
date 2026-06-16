@@ -645,44 +645,46 @@ function renderAdminStats() {
 
   const s1Active = window._showOnlySubmitted;
   const s2Active = window._showOnlyComplete;
+  const s3Active = window._showOnlyNotSubmitted;
+  const s4Active = window._showAllEntries;
 
   document.getElementById('adminStats').innerHTML = `
-    <div class="stat-card" onclick="showSubmittedList()" style="cursor:pointer;border-top-color:var(--green);${s1Active?'background:#D1FAE5;box-shadow:0 0 0 2px var(--green)':''}" title="${s1Active?'คลิกเพื่อยกเลิกการกรอง':'คลิกดูรายชื่อ'}">
+    <div class="stat-card" onclick="showSubmittedList()" style="cursor:pointer;border-top-color:var(--green);${s1Active?'background:#D1FAE5;box-shadow:0 0 0 2px var(--green)':''}" title="${s1Active?'คลิกเพื่อยกเลิก':'คลิกดูรายชื่อ'}">
       <div class="num" style="color:var(--green)">${schoolsSubmitted}</div>
       <div class="lbl">โรงเรียนที่ส่งแล้ว${s1Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>
-    <div class="stat-card">
-      <div class="num">${totalSchools - schoolsSubmitted}</div>
-      <div class="lbl">ยังไม่ส่ง</div>
+    <div class="stat-card" onclick="showNotSubmittedList()" style="cursor:pointer;${s3Active?'background:#FEF2F2;box-shadow:0 0 0 2px var(--red)':''}" title="${s3Active?'คลิกเพื่อยกเลิก':'คลิกดูรายชื่อ'}">
+      <div class="num" style="color:${s3Active?'var(--red)':'inherit'}">${totalSchools - schoolsSubmitted}</div>
+      <div class="lbl">ยังไม่ส่ง${s3Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>
-    <div class="stat-card">
-      <div class="num">${totalEntries}</div>
-      <div class="lbl">รายการทั้งหมด</div>
+    <div class="stat-card" onclick="showAllEntriesList()" style="cursor:pointer;${s4Active?'background:#EFF6FF;box-shadow:0 0 0 2px #3B82F6':''}" title="${s4Active?'คลิกเพื่อยกเลิก':'คลิกดูรายกิจกรรม'}">
+      <div class="num" style="color:${s4Active?'#3B82F6':'inherit'}">${totalEntries}</div>
+      <div class="lbl">รายการทั้งหมด${s4Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>
-    <div class="stat-card" onclick="showCompletedList()" style="cursor:pointer;border-top-color:var(--gold);${s2Active?'background:#FEF3C7;box-shadow:0 0 0 2px var(--gold)':''}" title="${s2Active?'คลิกเพื่อยกเลิกการกรอง':'คลิกดูรายชื่อ'}">
+    <div class="stat-card" onclick="showCompletedList()" style="cursor:pointer;border-top-color:var(--gold);${s2Active?'background:#FEF3C7;box-shadow:0 0 0 2px var(--gold)':''}" title="${s2Active?'คลิกเพื่อยกเลิก':'คลิกดูรายชื่อ'}">
       <div class="num" style="color:var(--navy)">${complete}</div>
       <div class="lbl">ส่งครบทุกกิจกรรม${s2Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>`;
 }
 
-// แสดงโรงเรียนที่ส่งแล้วในแท็บ byschool
 function showSubmittedList() {
-  // toggle: ถ้ากำลัง filter อยู่ → ยกเลิก, ถ้าไม่ได้ filter → เปิด
-  if (window._showOnlySubmitted) {
-    window._showOnlySubmitted = false;
-  } else {
-    window._showOnlySubmitted = true;
-    window._showOnlyComplete = false;
-  }
+  if (window._showOnlySubmitted) { window._showOnlySubmitted = false; }
+  else { window._showOnlySubmitted = true; window._showOnlyComplete = false; window._showOnlyNotSubmitted = false; window._showAllEntries = false; }
   switchAdminTab('byschool', null);
 }
+function showNotSubmittedList() {
+  if (window._showOnlyNotSubmitted) { window._showOnlyNotSubmitted = false; }
+  else { window._showOnlyNotSubmitted = true; window._showOnlySubmitted = false; window._showOnlyComplete = false; window._showAllEntries = false; }
+  switchAdminTab('byschool', null);
+}
+function showAllEntriesList() {
+  if (window._showAllEntries) { window._showAllEntries = false; }
+  else { window._showAllEntries = true; window._showOnlySubmitted = false; window._showOnlyComplete = false; window._showOnlyNotSubmitted = false; }
+  switchAdminTab('byactivity', null);
+}
 function showCompletedList() {
-  if (window._showOnlyComplete) {
-    window._showOnlyComplete = false;
-  } else {
-    window._showOnlyComplete = true;
-    window._showOnlySubmitted = false;
-  }
+  if (window._showOnlyComplete) { window._showOnlyComplete = false; }
+  else { window._showOnlyComplete = true; window._showOnlySubmitted = false; window._showOnlyNotSubmitted = false; window._showAllEntries = false; }
   switchAdminTab('byschool', null);
 }
 
@@ -804,8 +806,9 @@ function renderSchoolRows() {
     name.toLowerCase().includes(q) || code.includes(q));
 
   // filter by submitted/complete flags from stat cards
-  if (window._showOnlySubmitted) filtered = filtered.filter(([code]) => all[code]);
-  if (window._showOnlyComplete)  filtered = filtered.filter(([code]) => all[code] && Object.keys(all[code]).length >= 7);
+  if (window._showOnlySubmitted)    filtered = filtered.filter(([code]) => all[code]);
+  if (window._showOnlyComplete)     filtered = filtered.filter(([code]) => all[code] && Object.keys(all[code]).length >= 7);
+  if (window._showOnlyNotSubmitted) filtered = filtered.filter(([code]) => !all[code]);
 
   if (!filtered.length) return `<div class="no-data">ไม่พบโรงเรียนที่ค้นหา</div>`;
 
@@ -1343,6 +1346,8 @@ function exportExcel() {
 async function init() {
   window._showOnlySubmitted = false;
   window._showOnlyComplete = false;
+  window._showOnlyNotSubmitted = false;
+  window._showAllEntries = false;
   try {
     const settingsSnap = await db.collection('config').doc('settings').get();
     if (settingsSnap.exists) window._settingsCache = settingsSnap.data();
