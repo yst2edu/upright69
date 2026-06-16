@@ -456,10 +456,8 @@ function getDriveImageUrl(url) {
 }
 
 // ===== HOME =====
-function initHome() {
-  const s = loadSettings();
-  document.getElementById('homeClosedBanner').classList.toggle('show', !s.systemOpen);
-}
+const SESSION_KEY = 'yst2_session';
+const SESSION_DURATION = 10 * 60 * 1000;
 
 // ===== LOGIN =====
 function doLogin() {
@@ -488,20 +486,20 @@ function renderMenu() {
 
   const grid = document.getElementById('activityGrid');
   grid.innerHTML = '';
-  const s = loadSettings();
-  const criteriaUrl = s.criteriaUrl || '';
   ACTIVITIES.forEach(act => {
     const status = getActivityStatus(act);
-    const actKey = act.hasLevel ? `${act.id}_primary` : act.id; // ใช้ key แรกเพื่อหา criteria URL
     const actCriteriaUrl = s.criteriaUrls?.[act.id] || '';
     const card = document.createElement('div');
     card.className = 'activity-card';
+    const criteriaBtn = actCriteriaUrl
+      ? '<a href="' + actCriteriaUrl + '" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;text-decoration:none">📋 เกณฑ์การประกวด</a>'
+      : '';
     card.innerHTML = `
       <div class="status-dot ${status==='done'?'done':status==='partial'?'partial':''}"></div>
       <div class="act-icon">${act.icon}</div>
       <div class="act-title">${act.title.replace('\n','<br>')}</div>
       <div class="act-sub">${act.hasLevel?'2 ระดับ • คลิกเพื่อส่ง':'คลิกเพื่อส่ง'}</div>
-      ${actCriteriaUrl ? `<a href="${actCriteriaUrl}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;text-decoration:none">📋 เกณฑ์การประกวด</a>` : ''}`;
+      ${criteriaBtn}`;
     card.onclick = () => openForm(act);
     grid.appendChild(card);
   });
@@ -957,6 +955,14 @@ function renderSettingsTab() {
     </div>`;
   }).join('');
 
+  const criteriaRows = ACTIVITIES.map(act => {
+    const val = s.criteriaUrls?.[act.id] || '';
+    return '<div class="setting-row">'
+      + '<label style="flex:0 0 160px;font-size:12px">' + act.icon + ' ' + act.title.replace('\n',' ') + '</label>'
+      + '<input type="url" id="criteria_' + act.id + '" value="' + val + '" placeholder="https://" style="flex:1;padding:7px 10px;border:1.5px solid #D1D9E0;border-radius:6px;font-size:12px;font-family:Sarabun,sans-serif">'
+      + '</div>';
+  }).join('');
+
   return `
     <div class="settings-panel">
       <h3>🔒 สถานะระบบ</h3>
@@ -979,14 +985,7 @@ function renderSettingsTab() {
     <div class="settings-panel">
       <h3>📋 ลิงก์เกณฑ์การประกวดแต่ละกิจกรรม</h3>
       <p style="font-size:12px;color:var(--slate-light);margin-bottom:14px">ลิงก์จะแสดงเป็นปุ่มในการ์ดกิจกรรมของผู้ส่งผลงาน</p>
-      ${ACTIVITIES.map(act => {
-        const key = act.id;
-        const val = s.criteriaUrls?.[key] || '';
-        return `<div class="setting-row">
-          <label style="flex:0 0 160px;font-size:12px">${act.icon} ${act.title.replace('\n',' ')}</label>
-          <input type="url" id="criteria_${key}" value="${val}" placeholder="https://" style="flex:1;padding:7px 10px;border:1.5px solid #D1D9E0;border-radius:6px;font-size:12px;font-family:'Sarabun',sans-serif">
-        </div>`;
-      }).join('')}
+      ${criteriaRows}
       <button class="btn-save" onclick="saveCriteriaUrls()">💾 บันทึกลิงก์เกณฑ์</button>
     </div>
     <div class="settings-panel">
@@ -1366,9 +1365,6 @@ function confirmSchoolImport(rows) {
 }
 
 // ===== SESSION MANAGEMENT =====
-const SESSION_KEY = 'yst2_session';
-const SESSION_DURATION = 10 * 60 * 1000; // 10 นาที
-
 function saveSession(type, code) {
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({
     type,           // 'school' | 'admin'
