@@ -764,23 +764,27 @@ function renderModalActContent(code, actKey) {
   let html = `<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:16px">${ACT_KEY_LABELS[actKey]}${levelLabel}</div>`;
 
   fields.forEach(f => {
-    const url = sub[f.id];
-    if (!url) return;
+    const val = sub[f.id];
+    if (!val) return;
+    if (f.type === 'text') {
+      html += `<div style="margin-bottom:12px;padding:10px 14px;background:var(--cream);border-radius:8px">
+        <div style="font-size:11px;color:var(--slate-light);margin-bottom:2px">${f.label}</div>
+        <div style="font-size:14px;font-weight:600;color:var(--navy)">${val}</div>
+      </div>`;
+      return;
+    }
     html += `<div class="embed-card">`;
     html += `<div class="ec-label">${f.label}</div>`;
-
     if (f.type === 'video') {
-      const embed = detectVideoEmbed(url);
-      if (embed) {
-        html += `<div class="ec-video"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div>`;
-      }
-      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดลิงก์</a>`;
+      const embed = detectVideoEmbed(val);
+      if (embed) html += `<div class="ec-video"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div>`;
+      html += `<a class="ec-link" href="${val}" target="_blank">↗ เปิดลิงก์</a>`;
     } else if (f.type === 'photo') {
-      const imgUrl = getDriveImageUrl(url);
+      const imgUrl = getDriveImageUrl(val);
       if (imgUrl) html += `<div class="ec-photo"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.style.display='none'"></div>`;
-      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดภาพถ่าย</a>`;
+      html += `<a class="ec-link" href="${val}" target="_blank">↗ เปิดภาพถ่าย</a>`;
     } else {
-      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดลิงก์</a>`;
+      html += `<a class="ec-link" href="${val}" target="_blank">↗ เปิดลิงก์</a>`;
     }
     html += `</div>`;
   });
@@ -1059,6 +1063,14 @@ function saveCriteriaUrls() {
 }
 
 function toggleShowResults(val) {
+  const pw = prompt('ยืนยันการเปลี่ยนสถานะประกาศผล\nกรุณาใส่รหัสผ่านผู้ดูแล:');
+  if (pw !== '35020000') {
+    alert('รหัสผ่านไม่ถูกต้อง');
+    // คืนค่า checkbox เดิม
+    const cb = document.querySelector('#systemStatusLabel')?.closest('.setting-row')?.querySelector('input[type=checkbox]');
+    event.target.checked = !val;
+    return;
+  }
   const s = loadSettings();
   s.showResults = val;
   saveSettings(s);
@@ -1067,6 +1079,12 @@ function toggleShowResults(val) {
 }
 
 function toggleSystem(val) {
+  const pw = prompt('ยืนยันการเปลี่ยนสถานะการรับผลงาน\nกรุณาใส่รหัสผ่านผู้ดูแล:');
+  if (pw !== '35020000') {
+    alert('รหัสผ่านไม่ถูกต้อง');
+    event.target.checked = !val;
+    return;
+  }
   const s = loadSettings();
   s.systemOpen = val;
   saveSettings(s);
@@ -1288,6 +1306,8 @@ function renderResultsPage() {
 function initHome() {
   const s = loadSettings();
   document.getElementById('homeClosedBanner').classList.toggle('show', !s.systemOpen);
+  const sendBtn = document.querySelector('.btn-hero');
+  if (sendBtn) sendBtn.style.display = s.systemOpen ? '' : 'none';
   const btn = document.getElementById('resultsBtn');
   if (btn) btn.style.display = s.showResults ? 'block' : 'none';
 }
@@ -1451,20 +1471,27 @@ function renderJudgePage() {
 
     let previews = '';
     fields.forEach(f => {
-      const url = sub[f.id];
-      if (!url) return;
+      const val = sub[f.id];
+      if (!val) return;
+      if (f.type === 'text') {
+        previews += `<div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--slate-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${f.label}</div>
+          <div style="font-size:15px;font-weight:600;color:var(--navy)">${val}</div>
+        </div>`;
+        return;
+      }
       previews += `<div style="margin-bottom:18px">
         <div style="font-size:11px;font-weight:700;color:var(--slate-light);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">${f.label}</div>`;
       if (f.type === 'video') {
-        const embed = detectVideoEmbed(url);
+        const embed = detectVideoEmbed(val);
         if (embed) previews += `<div style="border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;position:relative;margin-bottom:10px"><iframe src="${embed.embedUrl}" allowfullscreen style="position:absolute;inset:0;width:100%;height:100%;border:none"></iframe></div>`;
-        previews += `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดลิงก์</a>`;
+        previews += `<a href="${val}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดลิงก์</a>`;
       } else if (f.type === 'photo') {
-        const imgUrl = getDriveImageUrl(url);
+        const imgUrl = getDriveImageUrl(val);
         if (imgUrl) previews += `<div style="border-radius:10px;overflow:hidden;background:var(--cream-dark);margin-bottom:10px;max-height:340px;display:flex;align-items:center;justify-content:center"><img src="${imgUrl}" alt="ภาพถ่าย" style="width:100%;max-height:340px;object-fit:contain;display:block" onerror="this.parentElement.style.display='none'"></div>`;
-        previews += `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดภาพถ่าย</a>`;
+        previews += `<a href="${val}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดภาพถ่าย</a>`;
       } else {
-        previews += `<a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดลิงก์</a>`;
+        previews += `<a href="${val}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none">↗ เปิดลิงก์</a>`;
       }
       previews += `</div>`;
     });
