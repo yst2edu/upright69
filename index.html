@@ -344,7 +344,7 @@
     <button class="admin-tab" onclick="switchAdminTab('judges',this)">⭐ กรรมการ</button>
     <button class="admin-tab" onclick="switchAdminTab('scores',this)">🏆 คะแนน</button>
     <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ ตั้งค่า</button>
-    <button class="admin-tab" onclick="exportExcel()" style="background:var(--green);color:#fff;border-radius:6px">📥 Export Excel</button>
+    <button class="admin-tab" onclick="switchAdminTab('backup',this)">💾 สำรองข้อมูล</button>
   </div>
   <div id="adminTabContent"></div>
 </div>
@@ -799,7 +799,7 @@ function switchAdminTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else {
-    const idx = ['byschool','byactivity','judges','scores','settings'].indexOf(tab);
+    const idx = ['byschool','byactivity','judges','scores','backup','settings'].indexOf(tab);
     document.querySelectorAll('.admin-tab')[idx]?.classList.add('active');
   }
   const content = document.getElementById('adminTabContent');
@@ -807,6 +807,7 @@ function switchAdminTab(tab, btn) {
   else if (tab === 'byactivity') content.innerHTML = renderByActivityTab();
   else if (tab === 'judges')     content.innerHTML = renderJudgesTab();
   else if (tab === 'scores')     content.innerHTML = renderScoresTab();
+  else if (tab === 'backup')     content.innerHTML = renderBackupTab();
   else                           content.innerHTML = renderSettingsTab();
 }
 
@@ -1576,6 +1577,103 @@ function saveJudgePassword(user) {
 }
 
 // ===== EXPORT EXCEL =====
+// ===== BACKUP TAB =====
+function renderBackupTab() {
+  return `
+    <div class="settings-panel">
+      <h3>📤 สำรองข้อมูล</h3>
+      <p style="font-size:13px;color:var(--slate-light);margin-bottom:16px;line-height:1.7">
+        ดาวน์โหลดข้อมูลการส่งผลงานทั้งหมดเป็นไฟล์ .json เพื่อสำรองหรือย้ายข้อมูล
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn-save" onclick="exportJSON()">💾 ดาวน์โหลดข้อมูล (.json)</button>
+        <button class="btn-save" onclick="exportExcel()" style="background:var(--navy)">📊 Export Excel (.xlsx)</button>
+      </div>
+    </div>
+    <div class="settings-panel">
+      <h3>📥 นำเข้าข้อมูล</h3>
+      <p style="font-size:13px;color:var(--slate-light);margin-bottom:6px;line-height:1.7">
+        นำเข้าไฟล์ .json ที่สำรองไว้ — <strong style="color:var(--red)">ข้อมูลปัจจุบันจะถูกแทนที่ทั้งหมด</strong>
+      </p>
+      <div id="importJsonDropZone" onclick="document.getElementById('importJsonInput').click()"
+        style="border:2px dashed #D1D9E0;border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream);margin-bottom:12px"
+        ondragover="event.preventDefault();this.style.borderColor='var(--red)'"
+        ondragleave="this.style.borderColor='#D1D9E0'"
+        ondrop="event.preventDefault();this.style.borderColor='#D1D9E0';handleImportJSON(event.dataTransfer.files[0])">
+        <div style="font-size:32px;margin-bottom:8px">📂</div>
+        <div style="font-size:14px;font-weight:600;color:var(--navy)">คลิกหรือลากไฟล์ .json มาวาง</div>
+      </div>
+      <input type="file" id="importJsonInput" accept=".json" style="display:none"
+        onchange="handleImportJSON(this.files[0])">
+      <div id="importJsonPreview"></div>
+    </div>`;
+}
+
+function exportJSON() {
+  const all = loadSubmissions();
+  const data = { submissions: all, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toLocaleDateString('th-TH').replace(/\//g, '-');
+  a.href = url;
+  a.download = `backup_yst2_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function handleImportJSON(file) {
+  if (!file) return;
+  const preview = document.getElementById('importJsonPreview');
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      const subs = data.submissions || data; // รองรับทั้ง format เก่าและใหม่
+      const schoolCount = Object.keys(subs).length;
+      let entryCount = 0;
+      Object.values(subs).forEach(s => { entryCount += Object.keys(s).length; });
+      const exportedAt = data.exportedAt ? new Date(data.exportedAt).toLocaleString('th-TH') : 'ไม่ระบุ';
+      preview.innerHTML = `
+        <div style="background:#FEF3C7;border:1px solid #FCD34D;border-radius:8px;padding:14px;margin-bottom:12px;font-size:13px">
+          ⚠️ พบข้อมูล <strong>${schoolCount} โรงเรียน</strong>, <strong>${entryCount} รายการ</strong><br>
+          สำรองเมื่อ: ${exportedAt}<br>
+          <span style="color:var(--red)">การนำเข้าจะแทนที่ข้อมูลทั้งหมดใน Firebase</span>
+        </div>
+        <button class="btn-save" style="background:var(--red)" onclick="confirmImportJSON(${JSON.stringify(JSON.stringify(subs)).replace(/</g,'&lt;')})">
+          ✅ ยืนยันนำเข้าและแทนที่ข้อมูล
+        </button>
+        <button onclick="document.getElementById('importJsonPreview').innerHTML=''" style="background:none;border:none;color:var(--slate-light);font-size:13px;cursor:pointer;margin-left:12px">ยกเลิก</button>`;
+    } catch(err) {
+      preview.innerHTML = `<div class="error-msg show">อ่านไฟล์ไม่ได้: ${err.message}</div>`;
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('importJsonInput').value = '';
+}
+
+async function confirmImportJSON(subsJson) {
+  const pw = prompt('ยืนยันการนำเข้าข้อมูล\nกรุณาใส่รหัสผ่านผู้ดูแล:');
+  if (pw !== '35020000') { alert('รหัสผ่านไม่ถูกต้อง'); return; }
+  const preview = document.getElementById('importJsonPreview');
+  preview.innerHTML = `<div style="font-size:13px;color:var(--slate-light)">⏳ กำลังนำเข้าข้อมูล...</div>`;
+  try {
+    const subs = JSON.parse(subsJson);
+    // เขียนทับทุก doc ใน Firestore
+    const batch = [];
+    for (const [code, data] of Object.entries(subs)) {
+      batch.push(db.collection('submissions').doc(code).set(data));
+    }
+    await Promise.all(batch);
+    // อัปเดต cache
+    window._submissionsCache = subs;
+    preview.innerHTML = `<div style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:8px;padding:12px 14px;font-size:13px;color:#065F46">✅ นำเข้าสำเร็จ ${Object.keys(subs).length} โรงเรียน</div>`;
+    renderAdminStats();
+  } catch(err) {
+    preview.innerHTML = `<div class="error-msg show">เกิดข้อผิดพลาด: ${err.message}</div>`;
+  }
+}
+
 function exportExcel() {
   const all = loadSubmissions();
   const wb = XLSX.utils.book_new();
