@@ -222,6 +222,7 @@
       <h1>ระบบส่งผลงานโครงการโรงเรียนสุจริต</h1>
       <p>สำนักงานเขตพื้นที่การศึกษาประถมศึกษายโสธร เขต 2</p>
     </div>
+    <a onclick="goTo('page-admin-login')" title="ผู้ดูแลระบบ" style="margin-left:auto;font-size:22px;color:rgba(255,255,255,0.45);cursor:pointer;transition:color .2s;flex-shrink:0" onmouseover="this.style.color='rgba(255,255,255,0.9)'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">👤</a>
   </div>
 </header>
 <main class="main">
@@ -234,7 +235,7 @@
     <p>ประจำปีงบประมาณ พ.ศ. 2569 | สพป.ยโสธร เขต 2</p>
     <div class="system-closed-banner" id="homeClosedBanner">⚠️ ระบบปิดรับผลงานแล้ว — ยังสามารถเข้าดูข้อมูลที่ส่งไปแล้วได้</div>
     <button class="btn-primary btn-hero" onclick="goTo('page-login')">ส่งผลงาน</button>
-    <a class="btn-admin-link" onclick="goTo('page-admin-login')">👤</a>
+    <a class="btn-admin-link" onclick="goTo('page-judge-login')" title="เข้าสู่ระบบกรรมการ">⭐</a>
   </div>
 </div>
 
@@ -301,6 +302,32 @@
   </div>
 </div>
 
+<!-- JUDGE LOGIN -->
+<div class="page" id="page-judge-login">
+  <button class="btn-back" onclick="goTo('page-home')">← กลับ</button>
+  <div class="login-box">
+    <h2>⭐ เข้าสู่ระบบกรรมการ</h2>
+    <p>สำหรับกรรมการตัดสินแต่ละกิจกรรม</p>
+    <div class="error-msg" id="judgeLoginError">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+    <div class="form-group"><label>ชื่อผู้ใช้</label><input class="form-control" type="text" id="judgeUser"></div>
+    <div class="form-group"><label>รหัสผ่าน</label><input class="form-control" type="password" id="judgePass" onkeydown="if(event.key==='Enter') doJudgeLogin()"></div>
+    <button class="btn-primary btn-block" onclick="doJudgeLogin()">เข้าสู่ระบบ →</button>
+  </div>
+</div>
+
+<!-- JUDGE DASHBOARD -->
+<div class="page" id="page-judge">
+  <div class="school-bar" style="background:linear-gradient(135deg,#4A235A,#6C3483)">
+    <div>
+      <div class="name" id="judgeActLabel"></div>
+      <div class="code" style="opacity:.7">ระบบกรรมการตัดสิน</div>
+    </div>
+    <button class="logout-btn" onclick="doJudgeLogout()">ออกจากระบบ</button>
+  </div>
+  <p class="section-title">รายชื่อโรงเรียนที่ส่งผลงาน</p>
+  <div id="judgeSchoolList"></div>
+</div>
+
 <!-- ADMIN DASHBOARD -->
 <div class="page" id="page-admin">
   <div class="admin-bar">
@@ -311,7 +338,9 @@
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchAdminTab('byschool',this)">🏫 รายโรงเรียน</button>
     <button class="admin-tab" onclick="switchAdminTab('byactivity',this)">📋 รายกิจกรรม</button>
+    <button class="admin-tab" onclick="switchAdminTab('judges',this)">⭐ กรรมการ</button>
     <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ ตั้งค่า</button>
+    <button class="admin-tab" onclick="exportExcel()" style="background:var(--green);color:#fff;border-radius:6px">📥 Export Excel</button>
   </div>
   <div id="adminTabContent"></div>
 </div>
@@ -738,13 +767,14 @@ function switchAdminTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else {
-    const idx = ['byschool','byactivity','settings'].indexOf(tab);
+    const idx = ['byschool','byactivity','judges','settings'].indexOf(tab);
     document.querySelectorAll('.admin-tab')[idx]?.classList.add('active');
   }
   const content = document.getElementById('adminTabContent');
-  if (tab==='byschool') content.innerHTML = renderBySchoolTab();
-  else if (tab==='byactivity') content.innerHTML = renderByActivityTab();
-  else content.innerHTML = renderSettingsTab();
+  if (tab === 'byschool')        content.innerHTML = renderBySchoolTab();
+  else if (tab === 'byactivity') content.innerHTML = renderByActivityTab();
+  else if (tab === 'judges')     content.innerHTML = renderJudgesTab();
+  else                           content.innerHTML = renderSettingsTab();
 }
 
 // ===== ADMIN CONSTANTS (global) =====
@@ -1125,6 +1155,138 @@ function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
 }
 
+// ===== JUDGE ACCOUNTS =====
+const JUDGE_ACCOUNTS = {
+  company:      { label:'บริษัทสร้างการดี',              actKey:'company' },
+  bestdirector: { label:'ถอดบทเรียนผู้บริหาร',           actKey:'lesson_director' },
+  bestteacher:  { label:'ถอดบทเรียนครู',                 actKey:'lesson_teacher' },
+  movie1:       { label:'ภาพยนตร์สั้น (ประถม)',          actKey:'film_primary' },
+  movie2:       { label:'ภาพยนตร์สั้น (ม.ต้น)',          actKey:'film_secondary' },
+  photo1:       { label:'ภาพถ่าย (ประถม)',               actKey:'photo_primary' },
+  photo2:       { label:'ภาพถ่าย (ม.ต้น)',               actKey:'photo_secondary' },
+};
+const JUDGE_PASSWORD = '35020000';
+let currentJudgeUser = null;
+
+function doJudgeLogin() {
+  const u = document.getElementById('judgeUser').value.trim();
+  const p = document.getElementById('judgePass').value;
+  const err = document.getElementById('judgeLoginError');
+  if (!JUDGE_ACCOUNTS[u] || p !== JUDGE_PASSWORD) { err.classList.add('show'); return; }
+  err.classList.remove('show');
+  currentJudgeUser = u;
+  saveSession('judge', u);
+  renderJudgePage();
+  goTo('page-judge');
+}
+
+function doJudgeLogout() {
+  currentJudgeUser = null;
+  clearSession();
+  document.getElementById('judgeUser').value = '';
+  document.getElementById('judgePass').value = '';
+  goTo('page-home');
+}
+
+function renderJudgePage() {
+  const acc = JUDGE_ACCOUNTS[currentJudgeUser];
+  document.getElementById('judgeActLabel').textContent = '⭐ ' + acc.label;
+  const all = loadSubmissions();
+  const actKey = acc.actKey;
+  const actId = actKey.replace('_primary','').replace('_secondary','');
+  const fields = FIELD_DEFS[actId] || [{id:'url1',label:'ลิงก์ผลงาน',type:'link'}];
+
+  const submitted = Object.entries(SCHOOLS)
+    .filter(([code]) => all[code]?.[actKey])
+    .sort(([a],[b]) => a.localeCompare(b));
+
+  if (!submitted.length) {
+    document.getElementById('judgeSchoolList').innerHTML =
+      `<div class="no-data">ยังไม่มีโรงเรียนส่งผลงานในกิจกรรมนี้</div>`;
+    return;
+  }
+
+  const cards = submitted.map(([code, name]) => {
+    const sub = all[code][actKey];
+    const d = new Date(sub.updatedAt);
+    const dateStr = d.toLocaleDateString('th-TH')+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    let previews = '';
+    fields.forEach(f => {
+      const url = sub[f.id];
+      if (!url) return;
+      if (f.type === 'video') {
+        const embed = detectVideoEmbed(url);
+        if (embed) previews += `<div class="ec-video" style="margin-bottom:8px"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div>`;
+        previews += `<a class="ec-link" href="${url}" target="_blank" style="margin-bottom:8px;display:inline-flex">↗ ${f.label}</a><br>`;
+      } else if (f.type === 'photo') {
+        const imgUrl = getDriveImageUrl(url);
+        if (imgUrl) previews += `<div class="ec-photo" style="margin-bottom:8px"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.style.display='none'"></div>`;
+        previews += `<a class="ec-link" href="${url}" target="_blank" style="margin-bottom:8px;display:inline-flex">↗ ${f.label}</a><br>`;
+      } else {
+        previews += `<a class="ec-link" href="${url}" target="_blank" style="margin-bottom:8px;display:inline-flex">↗ ${f.label}</a><br>`;
+      }
+    });
+    return `<div class="embed-card" style="margin-bottom:18px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${name}</div>
+        <div style="font-size:12px;color:var(--slate-light)">${code} • ส่งเมื่อ ${dateStr}</div>
+      </div>
+      ${previews}
+    </div>`;
+  }).join('');
+
+  document.getElementById('judgeSchoolList').innerHTML =
+    `<div style="font-size:13px;color:var(--slate-light);margin-bottom:16px">พบ ${submitted.length} โรงเรียน</div>${cards}`;
+}
+
+// ===== JUDGES ADMIN TAB =====
+function renderJudgesTab() {
+  const all = loadSubmissions();
+  const rows = Object.entries(JUDGE_ACCOUNTS).map(([user, acc]) => {
+    const count = Object.values(all).filter(s => s[acc.actKey]).length;
+    return `<tr>
+      <td><code style="background:var(--cream);padding:2px 8px;border-radius:4px;font-size:12px">${user}</code></td>
+      <td>${acc.label}</td>
+      <td><code style="background:var(--cream);padding:2px 8px;border-radius:4px;font-size:12px">${JUDGE_PASSWORD}</code></td>
+      <td style="text-align:center;font-weight:700;color:var(--green)">${count}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Username</th><th>กิจกรรม</th><th>รหัสผ่าน</th><th>โรงเรียนที่ส่ง</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ===== EXPORT EXCEL =====
+function exportExcel() {
+  const all = loadSubmissions();
+  const wb = XLSX.utils.book_new();
+  ACT_KEYS.forEach(actKey => {
+    const actId = actKey.replace('_primary','').replace('_secondary','');
+    const fields = FIELD_DEFS[actId] || [{id:'url1',label:'ลิงก์ผลงาน'}];
+    const rows = Object.entries(SCHOOLS)
+      .filter(([code]) => all[code]?.[actKey])
+      .sort(([a],[b]) => a.localeCompare(b))
+      .map(([code, name]) => {
+        const sub = all[code][actKey];
+        const d = new Date(sub.updatedAt);
+        const row = {'รหัสโรงเรียน': code, 'ชื่อโรงเรียน': name};
+        fields.forEach(f => { row[f.label] = sub[f.id] || ''; });
+        row['วันที่ส่ง'] = d.toLocaleDateString('th-TH')+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+        return row;
+      });
+    const ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{'รหัสโรงเรียน':'','ชื่อโรงเรียน':'(ยังไม่มีการส่งผลงาน)'}]);
+    ws['!cols'] = [{wch:14},{wch:36},...fields.map(()=>({wch:55})),{wch:20}];
+    XLSX.utils.book_append_sheet(wb, ws, ACT_KEY_LABELS[actKey].substring(0,31));
+  });
+  const date = new Date().toLocaleDateString('th-TH').replace(/\//g,'-');
+  XLSX.writeFile(wb, `สรุปผลงาน_สพป.ยโสธรเขต2_${date}.xlsx`);
+}
+
 async function init() {
   window._showOnlySubmitted = false;
   window._showOnlyComplete = false;
@@ -1141,6 +1303,10 @@ async function init() {
   if (sess && sess.type === 'admin') {
     renderAdmin();
     goTo('page-admin');
+  } else if (sess && sess.type === 'judge' && JUDGE_ACCOUNTS[sess.code]) {
+    currentJudgeUser = sess.code;
+    renderJudgePage();
+    goTo('page-judge');
   } else if (sess && sess.type === 'school' && SCHOOLS[sess.code]) {
     currentSchoolCode = sess.code;
     renderMenu();
