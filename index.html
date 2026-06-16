@@ -235,6 +235,9 @@
     <p>ประจำปีงบประมาณ พ.ศ. 2569 | สพป.ยโสธร เขต 2</p>
     <div class="system-closed-banner" id="homeClosedBanner">⚠️ ระบบปิดรับผลงานแล้ว — ยังสามารถเข้าดูข้อมูลที่ส่งไปแล้วได้</div>
     <button class="btn-primary btn-hero" onclick="goTo('page-login')">ส่งผลงาน</button>
+    <div id="resultsBtn" style="display:none;margin-top:16px">
+      <button class="btn-primary" onclick="goToResults()" style="background:linear-gradient(135deg,#C9A84C,#E8C96A);color:var(--navy);box-shadow:0 4px 16px rgba(201,168,76,0.4)">🏆 ประกาศผลการประกวด</button>
+    </div>
     <a class="btn-admin-link" onclick="goTo('page-judge-login')" title="เข้าสู่ระบบกรรมการ">⭐</a>
   </div>
 </div>
@@ -339,13 +342,25 @@
     <button class="admin-tab active" onclick="switchAdminTab('byschool',this)">🏫 รายโรงเรียน</button>
     <button class="admin-tab" onclick="switchAdminTab('byactivity',this)">📋 รายกิจกรรม</button>
     <button class="admin-tab" onclick="switchAdminTab('judges',this)">⭐ กรรมการ</button>
+    <button class="admin-tab" onclick="switchAdminTab('scores',this)">🏆 คะแนน</button>
     <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ ตั้งค่า</button>
     <button class="admin-tab" onclick="exportExcel()" style="background:var(--green);color:#fff;border-radius:6px">📥 Export Excel</button>
   </div>
   <div id="adminTabContent"></div>
 </div>
 
-<!-- SCHOOL DETAIL MODAL -->
+<!-- RESULTS PAGE -->
+<div class="page" id="page-results">
+  <button class="btn-back" onclick="goTo('page-home')">← กลับ</button>
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="font-size:36px;margin-bottom:8px">🏆</div>
+    <h2 style="font-size:20px;font-weight:700;color:var(--navy)">ผลการประกวดกิจกรรมต่อต้านการทุจริต</h2>
+    <p style="font-size:13px;color:var(--slate-light)">ประจำปีงบประมาณ พ.ศ. 2569 | สพป.ยโสธร เขต 2</p>
+  </div>
+  <div id="resultsContent"></div>
+</div>
+
+</main>
 <div id="schoolModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(18,40,64,0.55);overflow-y:auto;padding:20px 12px">
   <div style="background:#fff;border-radius:14px;max-width:760px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden">
     <div style="background:linear-gradient(135deg,#122840,#1B3A5C);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
@@ -384,12 +399,14 @@ const FIELD_DEFS = {
   lesson_teacher:  [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
   lesson_director: [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
   film: [
+    {id:'title', label:'ชื่อภาพยนตร์', hint:'', type:'text'},
     {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบรายงาน, โปสเตอร์', type:'link'},
     {id:'url2', label:'ลิงก์ไฟล์นำเสนอผลงานภาพยนตร์สั้น', hint:'Google Drive หรือ YouTube', type:'video'},
     {id:'url3', label:'ลิงก์ภาพยนตร์ YouTube', hint:'วาง URL จาก YouTube', type:'video'},
   ],
   photo: [
-    {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบเสนอแนวความคิด', type:'link'},
+    {id:'title', label:'ชื่อผลงาน', hint:'', type:'text'},
+    {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบเสนอแนวความคิด — และให้แนบไฟล์ภาพต้นฉบับที่ยังไม่ได้แต่งไปด้วย (RAW, JPG หรือ HEIC)', type:'link'},
     {id:'url2', label:'ภาพถ่าย', hint:'ลิงก์ไฟล์รูปภาพจาก Google Drive (แชร์แบบทุกคนมีลิงก์)', type:'photo'},
   ],
 };
@@ -471,15 +488,20 @@ function renderMenu() {
 
   const grid = document.getElementById('activityGrid');
   grid.innerHTML = '';
+  const s = loadSettings();
+  const criteriaUrl = s.criteriaUrl || '';
   ACTIVITIES.forEach(act => {
     const status = getActivityStatus(act);
+    const actKey = act.hasLevel ? `${act.id}_primary` : act.id; // ใช้ key แรกเพื่อหา criteria URL
+    const actCriteriaUrl = s.criteriaUrls?.[act.id] || '';
     const card = document.createElement('div');
     card.className = 'activity-card';
     card.innerHTML = `
       <div class="status-dot ${status==='done'?'done':status==='partial'?'partial':''}"></div>
       <div class="act-icon">${act.icon}</div>
       <div class="act-title">${act.title.replace('\n','<br>')}</div>
-      <div class="act-sub">${act.hasLevel?'2 ระดับ • คลิกเพื่อส่ง':'คลิกเพื่อส่ง'}</div>`;
+      <div class="act-sub">${act.hasLevel?'2 ระดับ • คลิกเพื่อส่ง':'คลิกเพื่อส่ง'}</div>
+      ${actCriteriaUrl ? `<a href="${actCriteriaUrl}" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;background:var(--gold);color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;text-decoration:none">📋 เกณฑ์การประกวด</a>` : ''}`;
     card.onclick = () => openForm(act);
     grid.appendChild(card);
   });
@@ -550,11 +572,17 @@ function renderUrlFields() {
 
   document.getElementById('urlFields').innerHTML = fields.map(f => {
     const val = existing[f.id] || '';
+    if (f.type === 'text') {
+      return `<div class="url-field-group">
+        <label>✏️ ${f.label}</label>
+        <input class="form-control" type="text" id="${f.id}" placeholder="กรอกชื่อ${f.label}" value="${val.replace(/"/g,'&quot;')}">
+      </div>`;
+    }
     let preview = '';
     if (val) {
       if (f.type === 'video') {
         const embed = detectVideoEmbed(val);
-        if (embed) preview = `<div class="video-preview" id="prev_${f.id}"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div><a class="video-open-link" href="${val}" target="_blank">↗ เปิดในแท็บใหม่</a>`;
+        if (embed) preview = `<div class="video-preview"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div><a class="video-open-link" href="${val}" target="_blank">↗ เปิดในแท็บใหม่</a>`;
       } else if (f.type === 'photo') {
         const imgUrl = getDriveImageUrl(val);
         if (imgUrl) preview = `<div class="photo-preview"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.innerHTML='<div class=\\'photo-err\\'>ไม่สามารถแสดงพรีวิวได้ — ตรวจสอบว่าลิงก์แชร์แบบสาธารณะ</div>'"></div>`;
@@ -597,7 +625,7 @@ function submitForm() {
   for (const f of fields) {
     const val = document.getElementById(f.id)?.value.trim() || '';
     if (!val) { errEl.textContent = `กรุณากรอก "${f.label}" ก่อนบันทึก`; errEl.classList.add('show'); sucEl.classList.remove('show'); return; }
-    if (!val.startsWith('http')) { errEl.textContent = `"${f.label}" ต้องเป็น URL ขึ้นต้นด้วย https://`; errEl.classList.add('show'); sucEl.classList.remove('show'); return; }
+    if (f.type !== 'text' && !val.startsWith('http')) { errEl.textContent = `"${f.label}" ต้องเป็น URL ขึ้นต้นด้วย https://`; errEl.classList.add('show'); sucEl.classList.remove('show'); return; }
     values[f.id] = val;
   }
   errEl.classList.remove('show');
@@ -769,13 +797,14 @@ function switchAdminTab(tab, btn) {
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
   if (btn) btn.classList.add('active');
   else {
-    const idx = ['byschool','byactivity','judges','settings'].indexOf(tab);
+    const idx = ['byschool','byactivity','judges','scores','settings'].indexOf(tab);
     document.querySelectorAll('.admin-tab')[idx]?.classList.add('active');
   }
   const content = document.getElementById('adminTabContent');
   if (tab === 'byschool')        content.innerHTML = renderBySchoolTab();
   else if (tab === 'byactivity') content.innerHTML = renderByActivityTab();
   else if (tab === 'judges')     content.innerHTML = renderJudgesTab();
+  else if (tab === 'scores')     content.innerHTML = renderScoresTab();
   else                           content.innerHTML = renderSettingsTab();
 }
 
@@ -948,6 +977,32 @@ function renderSettingsTab() {
       <button class="btn-save" onclick="saveFieldLabels()">💾 บันทึกการตั้งค่า</button>
     </div>
     <div class="settings-panel">
+      <h3>📋 ลิงก์เกณฑ์การประกวดแต่ละกิจกรรม</h3>
+      <p style="font-size:12px;color:var(--slate-light);margin-bottom:14px">ลิงก์จะแสดงเป็นปุ่มในการ์ดกิจกรรมของผู้ส่งผลงาน</p>
+      ${ACTIVITIES.map(act => {
+        const key = act.id;
+        const val = s.criteriaUrls?.[key] || '';
+        return `<div class="setting-row">
+          <label style="flex:0 0 160px;font-size:12px">${act.icon} ${act.title.replace('\n',' ')}</label>
+          <input type="url" id="criteria_${key}" value="${val}" placeholder="https://" style="flex:1;padding:7px 10px;border:1.5px solid #D1D9E0;border-radius:6px;font-size:12px;font-family:'Sarabun',sans-serif">
+        </div>`;
+      }).join('')}
+      <button class="btn-save" onclick="saveCriteriaUrls()">💾 บันทึกลิงก์เกณฑ์</button>
+    </div>
+    <div class="settings-panel">
+      <h3>🏆 การประกาศผล</h3>
+      <div class="setting-row">
+        <label>แสดงปุ่มประกาศผลในหน้าแรก</label>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" ${s.showResults?'checked':''} onchange="toggleShowResults(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label" id="resultsStatusLabel">${s.showResults?'แสดงอยู่':'ซ่อนอยู่'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="settings-panel">
       <h3>🏫 นำเข้ารายชื่อโรงเรียน</h3>
       <p style="font-size:13px;color:var(--slate-light);margin-bottom:16px;line-height:1.7">
         อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์ <strong>รหัสโรงเรียน</strong> และ <strong>ชื่อโรงเรียน</strong><br>
@@ -989,6 +1044,27 @@ function getFieldLabel(actId, level, fieldId) {
   const actKey = level ? `${actId}_${level}` : actId;
   const settingKey = `${actKey}__${fieldId}`;
   return s.fieldLabels?.[settingKey] || DEFAULT_FIELD_LABELS[fieldId] || 'ลิงก์ผลงาน';
+}
+
+function saveCriteriaUrls() {
+  const s = loadSettings();
+  if (!s.criteriaUrls) s.criteriaUrls = {};
+  ACTIVITIES.forEach(act => {
+    const el = document.getElementById('criteria_' + act.id);
+    if (el) s.criteriaUrls[act.id] = el.value.trim();
+  });
+  saveSettings(s);
+  const btn = event.target;
+  btn.textContent = '✅ บันทึกแล้ว';
+  setTimeout(() => { btn.textContent = '💾 บันทึกลิงก์เกณฑ์'; }, 2000);
+}
+
+function toggleShowResults(val) {
+  const s = loadSettings();
+  s.showResults = val;
+  saveSettings(s);
+  document.getElementById('resultsStatusLabel').textContent = val ? 'แสดงอยู่' : 'ซ่อนอยู่';
+  initHome();
 }
 
 function toggleSystem(val) {
@@ -1056,7 +1132,167 @@ function startFirebaseListeners() {
   });
 }
 
-// ===== SCHOOL IMPORT =====
+// ===== SCORES =====
+const REWARD_LABELS = ['🥇 ชนะเลิศ','🥈 รองชนะเลิศอันดับ 1','🥉 รองชนะเลิศอันดับ 2','🏅 ชมเชย'];
+
+function loadScores() { return window._settingsCache?.scores || {}; }
+
+function saveScore(actKey, code, score) {
+  const s = loadSettings();
+  if (!s.scores) s.scores = {};
+  if (!s.scores[actKey]) s.scores[actKey] = {};
+  s.scores[actKey][code] = score;
+  saveSettings(s);
+  window._settingsCache = s;
+}
+
+function getRanked(actKey) {
+  const scores = loadScores()[actKey] || {};
+  const all = loadSubmissions();
+  return Object.entries(scores)
+    .filter(([code, sc]) => all[code]?.[actKey] && sc !== '' && sc !== null)
+    .map(([code, sc]) => ({ code, score: Number(sc), name: SCHOOLS[code] || code }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+}
+
+function getRewardLabel(rank) {
+  if (rank === 0) return REWARD_LABELS[0];
+  if (rank === 1) return REWARD_LABELS[1];
+  if (rank === 2) return REWARD_LABELS[2];
+  return REWARD_LABELS[3];
+}
+
+let scoresActFilter = ACT_KEYS[0];
+
+function renderScoresTab() {
+  const filterBtns = ACT_KEYS.map(k =>
+    `<button class="act-filter-btn ${scoresActFilter===k?'active':''}"
+      onclick="scoresActFilter='${k}';document.getElementById('scoresContent').innerHTML=renderScoresTable()">${ACT_KEY_LABELS[k]}</button>`
+  ).join('');
+
+  return `
+    <div class="act-filter" style="margin-bottom:16px">${filterBtns}</div>
+    <div id="scoresContent">${renderScoresTable()}</div>`;
+}
+
+function renderScoresTable() {
+  const actKey = scoresActFilter;
+  const all = loadSubmissions();
+  const scores = loadScores()[actKey] || {};
+  const schools = Object.entries(SCHOOLS)
+    .filter(([code]) => all[code]?.[actKey])
+    .sort(([a],[b]) => a.localeCompare(b));
+
+  if (!schools.length) return `<div class="no-data">ยังไม่มีโรงเรียนส่งผลงานในกิจกรรมนี้</div>`;
+
+  const rows = schools.map(([code, name]) => {
+    const sc = scores[code] ?? '';
+    const sub = all[code][actKey];
+    const titleVal = sub.title ? `<span style="font-size:11px;color:var(--slate-light);display:block">${sub.title}</span>` : '';
+    return `<tr>
+      <td>${code}</td>
+      <td>${name}${titleVal}</td>
+      <td style="text-align:center">
+        <input type="number" min="0" max="100" value="${sc}"
+          style="width:70px;padding:5px 8px;border:1.5px solid #D1D9E0;border-radius:6px;font-size:13px;text-align:center;font-family:'Sarabun',sans-serif"
+          onchange="saveScore('${actKey}','${code}',this.value);updateRankPreview()">
+      </td>
+    </tr>`;
+  }).join('');
+
+  const ranked = getRanked(actKey);
+  const rankPreview = ranked.length ? ranked.map((r,i) => {
+    const sub = all[r.code]?.[actKey];
+    const titleText = sub?.title ? ` — "${sub.title}"` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--cream-dark)">
+      <span style="font-size:13px;min-width:180px">${getRewardLabel(i)}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--navy)">${r.name}</span>
+      <span style="font-size:11px;color:var(--slate-light)">${titleText}</span>
+      <span style="margin-left:auto;font-size:13px;font-weight:700;color:var(--green)">${r.score} คะแนน</span>
+    </div>`;
+  }).join('') : `<div style="color:var(--slate-light);font-size:13px">ยังไม่มีคะแนน</div>`;
+
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>รหัส</th><th>โรงเรียน</th><th>คะแนน (0-100)</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px" id="rankPreview">
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">🏆 อันดับปัจจุบัน</div>
+        ${rankPreview}
+      </div>
+    </div>`;
+}
+
+function updateRankPreview() {
+  const actKey = scoresActFilter;
+  const all = loadSubmissions();
+  const ranked = getRanked(actKey);
+  const el = document.getElementById('rankPreview');
+  if (!el) return;
+  const rankHtml = ranked.length ? ranked.map((r,i) => {
+    const sub = all[r.code]?.[actKey];
+    const titleText = sub?.title ? ` — "${sub.title}"` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--cream-dark)">
+      <span style="font-size:13px;min-width:180px">${getRewardLabel(i)}</span>
+      <span style="font-size:13px;font-weight:600;color:var(--navy)">${r.name}</span>
+      <span style="font-size:11px;color:var(--slate-light)">${titleText}</span>
+      <span style="margin-left:auto;font-size:13px;font-weight:700;color:var(--green)">${r.score} คะแนน</span>
+    </div>`;
+  }).join('') : `<div style="color:var(--slate-light);font-size:13px">ยังไม่มีคะแนน</div>`;
+  el.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px">🏆 อันดับปัจจุบัน</div>${rankHtml}`;
+}
+
+// ===== RESULTS PAGE =====
+function goToResults() {
+  renderResultsPage();
+  goTo('page-results');
+}
+
+function renderResultsPage() {
+  const all = loadSubmissions();
+  const sections = ACT_KEYS.map(actKey => {
+    const ranked = getRanked(actKey);
+    if (!ranked.length) return '';
+    const hasTitle = ['film_primary','film_secondary','photo_primary','photo_secondary'].includes(actKey);
+    const rows = ranked.map((r, i) => {
+      const sub = all[r.code]?.[actKey];
+      const titleText = hasTitle && sub?.title ? `<div style="font-size:12px;color:var(--slate-light);margin-top:1px">"${sub.title}"</div>` : '';
+      const reward = getRewardLabel(i);
+      const bgColor = i===0?'#FEF9E7':i===1?'#F8F9FA':i===2?'#FDF5E6':'#FAFAFA';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:${bgColor};border-radius:8px;margin-bottom:6px">
+        <div style="font-size:22px">${reward.split(' ')[0]}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--navy)">${r.name}</div>
+          ${titleText}
+        </div>
+        <div style="font-size:11px;color:var(--slate-light);white-space:nowrap">${reward.replace(/^[^\s]+\s/,'')}</div>
+        <div style="font-size:14px;font-weight:700;color:var(--green);min-width:60px;text-align:right">${r.score} คะแนน</div>
+      </div>`;
+    }).join('');
+
+    return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px">
+      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--gold)">${ACT_KEY_LABELS[actKey]}</h3>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  document.getElementById('resultsContent').innerHTML = sections || `<div class="no-data">ยังไม่มีผลการประกวด</div>`;
+}
+
+// ===== UPDATE initHome =====
+function initHome() {
+  const s = loadSettings();
+  document.getElementById('homeClosedBanner').classList.toggle('show', !s.systemOpen);
+  const btn = document.getElementById('resultsBtn');
+  if (btn) btn.style.display = s.showResults ? 'block' : 'none';
+}
 function handleSchoolImportFile(file) {
   if (!file) return;
   const preview = document.getElementById('importPreview');
