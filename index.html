@@ -102,8 +102,8 @@
   .url-hint { font-size:11px; color:var(--slate-light); margin-top:5px; }
 
   /* VIDEO PLAYER */
-  .video-preview { margin-top:10px; border-radius:8px; overflow:hidden; background:#000; position:relative; }
-  .video-preview iframe { width:100%; height:220px; border:none; display:block; }
+  .video-preview { margin-top:10px; border-radius:8px; overflow:hidden; background:#000; position:relative; aspect-ratio:16/9; }
+  .video-preview iframe { position:absolute; inset:0; width:100%; height:100%; border:none; display:block; }
   .video-preview .play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); cursor:pointer; transition:background .2s; }
   .video-preview .play-btn:hover { background:rgba(0,0,0,.3); }
   .video-preview .play-btn span { font-size:52px; }
@@ -162,6 +162,21 @@
   tbody tr:nth-child(even) { background:var(--cream); }
   tbody tr:hover { background:#EAF0F8; }
   tbody td { padding:9px 12px; border-bottom:1px solid var(--cream-dark); vertical-align:middle; }
+  /* sticky first 2 columns */
+  thead th:nth-child(1), tbody td:nth-child(1) {
+    position:sticky; left:0; z-index:2; background:var(--navy); min-width:90px;
+  }
+  thead th:nth-child(2), tbody td:nth-child(2) {
+    position:sticky; left:90px; z-index:2; min-width:180px;
+    box-shadow:2px 0 6px rgba(27,58,92,0.10);
+  }
+  thead th:nth-child(1), thead th:nth-child(2) { z-index:3; }
+  tbody tr:nth-child(even) td:nth-child(1),
+  tbody tr:nth-child(even) td:nth-child(2) { background:var(--cream); }
+  tbody tr:nth-child(odd) td:nth-child(1),
+  tbody tr:nth-child(odd) td:nth-child(2) { background:var(--white); }
+  tbody tr:hover td:nth-child(1),
+  tbody tr:hover td:nth-child(2) { background:#EAF0F8; }
   .td-url a { color:var(--navy); text-decoration:none; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
   .td-url a:hover { text-decoration:underline; }
   .no-data { text-align:center; color:var(--slate-light); font-size:13px; padding:30px; }
@@ -190,8 +205,8 @@
   /* EMBED CARDS */
   .embed-card { background:var(--cream); border-radius:var(--radius); padding:16px; margin-bottom:14px; border-left:4px solid var(--gold); }
   .embed-card .ec-label { font-size:12px; font-weight:700; color:var(--slate-light); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
-  .embed-card .ec-video { border-radius:8px; overflow:hidden; background:#000; margin-bottom:10px; }
-  .embed-card .ec-video iframe { width:100%; height:240px; border:none; display:block; }
+  .embed-card .ec-video { border-radius:8px; overflow:hidden; background:#000; margin-bottom:10px; position:relative; aspect-ratio:16/9; }
+  .embed-card .ec-video iframe { position:absolute; inset:0; width:100%; height:100%; border:none; display:block; }
   .embed-card .ec-link { display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; padding:7px 16px; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; transition:background .2s; }
   .embed-card .ec-link:hover { background:var(--navy-light); }
   .embed-card .ec-photo { border-radius:8px; overflow:hidden; max-height:260px; display:flex; align-items:center; justify-content:center; background:var(--cream-dark); margin-bottom:10px; }
@@ -321,6 +336,7 @@
 <!-- Firebase CDN (compat mode — ใช้ได้กับ script ธรรมดา ไม่ต้อง type=module) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
 // ===== DATA =====
@@ -405,11 +421,13 @@ function doLogin() {
   if (!SCHOOLS[code]) { document.getElementById('loginError').classList.add('show'); return; }
   document.getElementById('loginError').classList.remove('show');
   currentSchoolCode = code;
+  saveSession('school', code);
   renderMenu();
   goTo('page-menu');
 }
 function doLogout() {
   currentSchoolCode = null;
+  clearSession();
   document.getElementById('schoolCodeInput').value = '';
   initHome();
   goTo('page-home');
@@ -572,10 +590,12 @@ function doAdminLogin() {
   const p = document.getElementById('adminPass').value;
   if (u==='yst2' && p==='35020000') {
     document.getElementById('adminLoginError').classList.remove('show');
+    saveSession('admin', null);
     renderAdmin(); goTo('page-admin');
   } else { document.getElementById('adminLoginError').classList.add('show'); }
 }
 function doAdminLogout() {
+  clearSession();
   document.getElementById('adminUser').value='';
   document.getElementById('adminPass').value='';
   goTo('page-home');
@@ -593,37 +613,47 @@ function renderAdminStats() {
   let totalEntries = 0;
   Object.values(all).forEach(s => { totalEntries += Object.keys(s).length; });
   const complete = Object.values(all).filter(s => Object.keys(s).length >= 7).length;
+
+  const s1Active = window._showOnlySubmitted;
+  const s2Active = window._showOnlyComplete;
+
   document.getElementById('adminStats').innerHTML = `
-    <div class="stat-card" onclick="showSubmittedList()" style="cursor:pointer;border-top-color:var(--green)" title="คลิกดูรายชื่อ">
+    <div class="stat-card" onclick="showSubmittedList()" style="cursor:pointer;border-top-color:var(--green);${s1Active?'background:#D1FAE5;box-shadow:0 0 0 2px var(--green)':''}" title="${s1Active?'คลิกเพื่อยกเลิกการกรอง':'คลิกดูรายชื่อ'}">
       <div class="num" style="color:var(--green)">${schoolsSubmitted}</div>
-      <div class="lbl">โรงเรียนที่ส่งแล้ว 🔍</div>
+      <div class="lbl">โรงเรียนที่ส่งแล้ว${s1Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>
     <div class="stat-card">
-      <div class="num">${totalSchools-schoolsSubmitted}</div>
+      <div class="num">${totalSchools - schoolsSubmitted}</div>
       <div class="lbl">ยังไม่ส่ง</div>
     </div>
     <div class="stat-card">
       <div class="num">${totalEntries}</div>
       <div class="lbl">รายการทั้งหมด</div>
     </div>
-    <div class="stat-card" onclick="showCompletedList()" style="cursor:pointer;border-top-color:var(--gold)" title="คลิกดูรายชื่อ">
+    <div class="stat-card" onclick="showCompletedList()" style="cursor:pointer;border-top-color:var(--gold);${s2Active?'background:#FEF3C7;box-shadow:0 0 0 2px var(--gold)':''}" title="${s2Active?'คลิกเพื่อยกเลิกการกรอง':'คลิกดูรายชื่อ'}">
       <div class="num" style="color:var(--navy)">${complete}</div>
-      <div class="lbl">ส่งครบทุกกิจกรรม 🔍</div>
+      <div class="lbl">ส่งครบทุกกิจกรรม${s2Active?' <span style="font-size:10px">✕</span>':' 🔍'}</div>
     </div>`;
 }
 
 // แสดงโรงเรียนที่ส่งแล้วในแท็บ byschool
 function showSubmittedList() {
-  const all = loadSubmissions();
-  window.adminSearch = '';
-  // switch to byschool tab and filter to submitted only
-  window._showOnlySubmitted = true;
-  window._showOnlyComplete = false;
+  // toggle: ถ้ากำลัง filter อยู่ → ยกเลิก, ถ้าไม่ได้ filter → เปิด
+  if (window._showOnlySubmitted) {
+    window._showOnlySubmitted = false;
+  } else {
+    window._showOnlySubmitted = true;
+    window._showOnlyComplete = false;
+  }
   switchAdminTab('byschool', null);
 }
 function showCompletedList() {
-  window._showOnlySubmitted = false;
-  window._showOnlyComplete = true;
+  if (window._showOnlyComplete) {
+    window._showOnlyComplete = false;
+  } else {
+    window._showOnlyComplete = true;
+    window._showOnlySubmitted = false;
+  }
   switchAdminTab('byschool', null);
 }
 
@@ -883,6 +913,25 @@ function renderSettingsTab() {
       <h3>📝 ชื่อช่องกรอกแต่ละกิจกรรม</h3>
       ${fieldRows}
       <button class="btn-save" onclick="saveFieldLabels()">💾 บันทึกการตั้งค่า</button>
+    </div>
+    <div class="settings-panel">
+      <h3>🏫 นำเข้ารายชื่อโรงเรียน</h3>
+      <p style="font-size:13px;color:var(--slate-light);margin-bottom:16px;line-height:1.7">
+        อัปโหลดไฟล์ Excel (.xlsx) หรือ CSV ที่มีคอลัมน์ <strong>รหัสโรงเรียน</strong> และ <strong>ชื่อโรงเรียน</strong><br>
+        ข้อมูลใหม่จะแทนที่รายชื่อในหน่วยความจำทันที (ไม่บันทึกลง Firebase)
+      </p>
+      <div id="importDropZone" onclick="document.getElementById('importFileInput').click()"
+        style="border:2px dashed #D1D9E0;border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)"
+        ondragover="event.preventDefault();this.style.borderColor='var(--navy)'"
+        ondragleave="this.style.borderColor='#D1D9E0'"
+        ondrop="event.preventDefault();this.style.borderColor='#D1D9E0';handleSchoolImportFile(event.dataTransfer.files[0])">
+        <div style="font-size:32px;margin-bottom:8px">📂</div>
+        <div style="font-size:14px;font-weight:600;color:var(--navy)">คลิกหรือลากไฟล์มาวางที่นี่</div>
+        <div style="font-size:12px;color:var(--slate-light);margin-top:4px">รองรับ .xlsx และ .csv</div>
+      </div>
+      <input type="file" id="importFileInput" accept=".xlsx,.csv" style="display:none"
+        onchange="handleSchoolImportFile(this.files[0])">
+      <div id="importPreview" style="margin-top:16px"></div>
     </div>`;
 }
 
@@ -974,6 +1023,108 @@ function startFirebaseListeners() {
   });
 }
 
+// ===== SCHOOL IMPORT =====
+function handleSchoolImportFile(file) {
+  if (!file) return;
+  const preview = document.getElementById('importPreview');
+  preview.innerHTML = `<div style="font-size:13px;color:var(--slate-light)">⏳ กำลังอ่านไฟล์...</div>`;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      let rows = [];
+      if (file.name.endsWith('.csv')) {
+        // parse CSV
+        const text = new TextDecoder('utf-8').decode(new Uint8Array(e.target.result));
+        const lines = text.trim().split('\n');
+        const header = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
+        const codeIdx = header.findIndex(h => h.includes('รหัส'));
+        const nameIdx = header.findIndex(h => h.includes('ชื่อ'));
+        if (codeIdx < 0 || nameIdx < 0) { preview.innerHTML = `<div class="error-msg show">ไม่พบคอลัมน์ "รหัสโรงเรียน" และ "ชื่อโรงเรียน"</div>`; return; }
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',').map(c => c.replace(/"/g,'').trim());
+          if (cols[codeIdx] && cols[nameIdx]) rows.push({code: cols[codeIdx], name: cols[nameIdx]});
+        }
+      } else {
+        // parse XLSX
+        const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(ws, {defval:''});
+        const firstRow = data[0] || {};
+        const keys = Object.keys(firstRow);
+        const codeKey = keys.find(k => k.includes('รหัส'));
+        const nameKey = keys.find(k => k.includes('ชื่อ'));
+        if (!codeKey || !nameKey) { preview.innerHTML = `<div class="error-msg show">ไม่พบคอลัมน์ "รหัสโรงเรียน" และ "ชื่อโรงเรียน" ในไฟล์</div>`; return; }
+        data.forEach(r => { if (r[codeKey] && r[nameKey]) rows.push({code: String(r[codeKey]).trim(), name: String(r[nameKey]).trim()}); });
+      }
+
+      if (!rows.length) { preview.innerHTML = `<div class="error-msg show">ไม่พบข้อมูลในไฟล์</div>`; return; }
+
+      // show preview
+      const previewRows = rows.slice(0,5).map(r => `<tr><td style="padding:4px 10px;font-size:12px">${r.code}</td><td style="padding:4px 10px;font-size:12px">${r.name}</td></tr>`).join('');
+      preview.innerHTML = `
+        <div style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#065F46">
+          พบข้อมูล <strong>${rows.length}</strong> โรงเรียน
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:12px">
+          <thead><tr style="background:var(--navy);color:#fff">
+            <th style="padding:6px 10px;font-size:12px;text-align:left">รหัสโรงเรียน</th>
+            <th style="padding:6px 10px;font-size:12px;text-align:left">ชื่อโรงเรียน</th>
+          </tr></thead>
+          <tbody>${previewRows}</tbody>
+        </table>
+        ${rows.length > 5 ? `<div style="font-size:12px;color:var(--slate-light);margin-bottom:10px">...และอีก ${rows.length-5} โรงเรียน</div>` : ''}
+        <button class="btn-save" onclick="confirmSchoolImport(${JSON.stringify(rows).replace(/</g,'&lt;')})">
+          ✅ ยืนยันนำเข้า แทนที่รายชื่อเดิมทั้งหมด
+        </button>
+        <button onclick="document.getElementById('importPreview').innerHTML=''" style="background:none;border:none;color:var(--slate-light);font-size:13px;cursor:pointer;margin-left:12px">ยกเลิก</button>`;
+    } catch(err) {
+      preview.innerHTML = `<div class="error-msg show">อ่านไฟล์ไม่ได้: ${err.message}</div>`;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  // reset input so same file can be re-selected
+  document.getElementById('importFileInput').value = '';
+}
+
+function confirmSchoolImport(rows) {
+  rows.forEach(r => { SCHOOLS[r.code] = r.name; });
+  // clear codes not in new list
+  const newCodes = new Set(rows.map(r => r.code));
+  Object.keys(SCHOOLS).forEach(k => { if (!newCodes.has(k)) delete SCHOOLS[k]; });
+  document.getElementById('importPreview').innerHTML =
+    `<div style="background:#D1FAE5;border:1px solid #6EE7B7;border-radius:8px;padding:12px 14px;font-size:13px;color:#065F46">✅ นำเข้าสำเร็จ ${rows.length} โรงเรียน (มีผลในเซสชันนี้)</div>`;
+}
+
+// ===== SESSION MANAGEMENT =====
+const SESSION_KEY = 'yst2_session';
+const SESSION_DURATION = 10 * 60 * 1000; // 10 นาที
+
+function saveSession(type, code) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    type,           // 'school' | 'admin'
+    code: code || null,
+    ts: Date.now()
+  }));
+}
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.ts > SESSION_DURATION) { sessionStorage.removeItem(SESSION_KEY); return null; }
+    // ต่ออายุ session ทุกครั้งที่โหลด
+    s.ts = Date.now();
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    return s;
+  } catch(e) { return null; }
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
 async function init() {
   window._showOnlySubmitted = false;
   window._showOnlyComplete = false;
@@ -984,9 +1135,20 @@ async function init() {
     subsSnap.forEach(doc => { window._submissionsCache[doc.id] = doc.data(); });
   } catch(e) { console.warn('Firebase init error:', e); }
   startFirebaseListeners();
-  initHome();
 
-  // close modal on backdrop click
+  // restore session
+  const sess = loadSession();
+  if (sess && sess.type === 'admin') {
+    renderAdmin();
+    goTo('page-admin');
+  } else if (sess && sess.type === 'school' && SCHOOLS[sess.code]) {
+    currentSchoolCode = sess.code;
+    renderMenu();
+    goTo('page-menu');
+  } else {
+    initHome();
+  }
+
   document.getElementById('schoolModal').addEventListener('click', function(e) {
     if (e.target === this) closeSchoolModal();
   });
