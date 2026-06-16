@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบส่งผลงานโครงการโรงเรียนสุจริต – สพป.ยโสธร เขต 2</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1B3A5C; --navy-dark: #122840; --navy-light: #2A5080;
+    --gold: #C9A84C; --gold-light: #E8C96A;
+    --cream: #F8F5EE; --cream-dark: #EDE9E0;
+    --slate: #4A5568; --slate-light: #718096;
+    --green: #2D7D46; --red: #C0392B; --white: #FFFFFF;
+    --shadow: 0 2px 12px rgba(27,58,92,0.10);
+    --shadow-md: 0 4px 24px rgba(27,58,92,0.14);
+    --radius: 10px;
+  }
+  body { font-family:'Sarabun',sans-serif; background:var(--cream); color:var(--slate); min-height:100vh; font-size:16px; line-height:1.6; }
+
+  /* HEADER */
+  .site-header { background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 60%,var(--navy-light) 100%); color:var(--white); position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(0,0,0,0.25); }
+  .header-inner { max-width:900px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; gap:14px; }
+  .header-logo { width:44px; height:44px; background:var(--gold); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .header-text h1 { font-size:15px; font-weight:700; line-height:1.3; }
+  .header-text p { font-size:12px; opacity:.75; }
+
+  /* MAIN */
+  .main { max-width:900px; margin:0 auto; padding:30px 20px 60px; }
+  .page { display:none; } .page.active { display:block; }
+
+  /* HERO */
+  .hero { text-align:center; padding:40px 20px 30px; }
+  .hero-emblem { width:90px; height:90px; background:linear-gradient(135deg,var(--navy),var(--navy-light)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:44px; margin:0 auto 20px; box-shadow:0 4px 20px rgba(27,58,92,0.3),0 0 0 6px rgba(201,168,76,0.2); }
+  .hero h2 { font-size:22px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+  .hero p { color:var(--slate-light); font-size:14px; margin-bottom:36px; }
+
+  /* BUTTONS */
+  .btn-primary { display:inline-flex; align-items:center; gap:8px; background:var(--navy); color:var(--white); border:none; padding:14px 36px; border-radius:50px; font-size:16px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; transition:all .2s; box-shadow:0 4px 16px rgba(27,58,92,0.3); text-decoration:none; }
+  .btn-primary:hover { background:var(--navy-light); transform:translateY(-1px); box-shadow:0 6px 20px rgba(27,58,92,0.35); }
+  .btn-hero { font-size:20px !important; padding:18px 56px !important; }
+  .btn-admin-link { display:block; margin-top:20px; font-size:20px; color:var(--slate-light); cursor:pointer; opacity:.4; transition:opacity .2s; }
+  .btn-admin-link:hover { opacity:.8; }
+  .btn-block { width:100%; padding:13px; font-size:15px; justify-content:center; border-radius:8px; }
+  .btn-back { background:none; border:none; color:var(--slate-light); font-size:13px; font-family:'Sarabun',sans-serif; cursor:pointer; display:flex; align-items:center; gap:4px; margin-bottom:20px; padding:0; }
+  .btn-back:hover { color:var(--navy); }
+  .btn-secondary { display:inline-flex; align-items:center; gap:6px; background:var(--cream); color:var(--slate); border:1.5px solid #D1D9E0; padding:11px 24px; border-radius:8px; font-size:14px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; transition:all .2s; }
+  .btn-secondary:hover { background:var(--cream-dark); }
+
+  /* LOGIN */
+  .login-box { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-md); padding:36px 32px; max-width:420px; margin:0 auto; }
+  .login-box h2 { font-size:18px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+  .login-box p { font-size:13px; color:var(--slate-light); margin-bottom:24px; }
+  .form-group { margin-bottom:18px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; color:var(--slate); margin-bottom:6px; }
+  .form-control { width:100%; padding:11px 14px; border:1.5px solid #D1D9E0; border-radius:8px; font-size:15px; font-family:'Sarabun',sans-serif; color:var(--slate); transition:border-color .2s; background:var(--white); letter-spacing:.05em; }
+  .form-control:focus { outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(27,58,92,0.08); }
+  .error-msg { background:#FEF2F2; border:1px solid #FECACA; color:var(--red); border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+  .error-msg.show { display:block; }
+  .success-banner { background:#D1FAE5; border:1px solid #6EE7B7; color:#065F46; border-radius:8px; padding:12px 16px; font-size:13px; margin-bottom:16px; display:none; align-items:center; gap:8px; }
+  .success-banner.show { display:flex; }
+
+  /* SCHOOL BAR */
+  .school-bar { background:var(--navy); color:var(--white); border-radius:var(--radius); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .school-bar .name { font-weight:700; font-size:15px; }
+  .school-bar .code { font-size:12px; opacity:.7; }
+  .school-bar .logout-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:var(--white); border-radius:20px; padding:4px 14px; font-size:12px; font-family:'Sarabun',sans-serif; cursor:pointer; }
+  .section-title { font-size:14px; font-weight:700; color:var(--slate-light); text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px; }
+
+  /* ACTIVITY CARDS */
+  .activity-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:28px; }
+  @media(max-width:560px){ .activity-grid { grid-template-columns:1fr; } }
+  .activity-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 18px 18px 22px; border-left:4px solid var(--gold); cursor:pointer; transition:all .2s; position:relative; }
+  .activity-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-left-color:var(--navy); }
+  .activity-card .act-icon { font-size:26px; margin-bottom:8px; }
+  .activity-card .act-title { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:4px; line-height:1.4; }
+  .activity-card .act-sub { font-size:12px; color:var(--slate-light); }
+  .status-dot { position:absolute; top:14px; right:14px; width:10px; height:10px; border-radius:50%; background:#D1D9E0; }
+  .status-dot.done { background:var(--green); }
+  .status-dot.partial { background:var(--gold); }
+
+  /* SUMMARY */
+  .summary-section { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; margin-top:8px; }
+  .summary-section h3 { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:14px; }
+  .summary-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--cream-dark); font-size:13px; }
+  .summary-row:last-child { border-bottom:none; }
+  .summary-row .act-name { color:var(--slate); flex:1; }
+  .tag-done { background:#D1FAE5; color:#065F46; border-radius:20px; padding:2px 10px; font-size:11px; font-weight:600; }
+  .tag-pending { background:#F3F4F6; color:#9CA3AF; border-radius:20px; padding:2px 10px; font-size:11px; }
+
+  /* FORM */
+  .form-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-md); padding:28px 28px 32px; max-width:600px; margin:0 auto; }
+  .form-card h2 { font-size:17px; font-weight:700; color:var(--navy); margin-bottom:4px; border-left:4px solid var(--gold); padding-left:12px; }
+  .form-card .form-sub { font-size:12px; color:var(--slate-light); margin-bottom:24px; padding-left:16px; }
+  .level-tabs { display:flex; gap:10px; margin-bottom:24px; }
+  .level-tab { flex:1; padding:10px; text-align:center; border:1.5px solid #D1D9E0; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; color:var(--slate-light); background:var(--cream); transition:all .2s; font-family:'Sarabun',sans-serif; }
+  .level-tab.active { border-color:var(--navy); background:var(--navy); color:var(--white); }
+  .url-field-group { margin-bottom:18px; }
+  .url-field-group label { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); margin-bottom:6px; }
+  .url-hint { font-size:11px; color:var(--slate-light); margin-top:5px; }
+
+  /* VIDEO PLAYER */
+  .video-preview { margin-top:10px; border-radius:8px; overflow:hidden; background:#000; position:relative; }
+  .video-preview iframe { width:100%; height:220px; border:none; display:block; }
+  .video-preview .play-btn { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); cursor:pointer; transition:background .2s; }
+  .video-preview .play-btn:hover { background:rgba(0,0,0,.3); }
+  .video-preview .play-btn span { font-size:52px; }
+  .video-open-link { display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:var(--navy); text-decoration:none; }
+  .video-open-link:hover { text-decoration:underline; }
+
+  /* PHOTO PREVIEW */
+  .photo-preview { margin-top:10px; border-radius:8px; overflow:hidden; background:var(--cream-dark); max-height:220px; display:flex; align-items:center; justify-content:center; }
+  .photo-preview img { width:100%; max-height:220px; object-fit:contain; display:block; }
+  .photo-preview .photo-err { font-size:12px; color:var(--slate-light); padding:20px; text-align:center; }
+
+  /* BANNERS */
+  .system-closed-banner { background:#FEF3C7; border:1px solid #FCD34D; color:#92400E; border-radius:8px; padding:12px 16px; font-size:13px; margin-bottom:20px; display:none; align-items:center; gap:8px; }
+  .system-closed-banner.show { display:flex; }
+
+  /* ADMIN */
+  .admin-bar { background:var(--navy-dark); color:var(--white); border-radius:var(--radius); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+  .admin-bar .title { font-weight:700; font-size:15px; }
+  .admin-bar .logout-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:var(--white); border-radius:20px; padding:4px 14px; font-size:12px; font-family:'Sarabun',sans-serif; cursor:pointer; }
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+  @media(max-width:600px){ .stats-row { grid-template-columns:repeat(2,1fr); } }
+  .stat-card { background:var(--white); border-radius:var(--radius); padding:16px 14px; box-shadow:var(--shadow); text-align:center; border-top:3px solid var(--gold); }
+  .stat-card .num { font-size:28px; font-weight:700; color:var(--navy); line-height:1; margin-bottom:4px; }
+  .stat-card .lbl { font-size:11px; color:var(--slate-light); line-height:1.3; }
+  .admin-tabs { display:flex; gap:2px; margin-bottom:20px; background:var(--cream-dark); border-radius:8px; padding:3px; }
+  .admin-tab { flex:1; padding:8px; text-align:center; border:none; border-radius:6px; font-size:13px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; background:none; color:var(--slate-light); transition:all .2s; }
+  .admin-tab.active { background:var(--white); color:var(--navy); box-shadow:var(--shadow); }
+
+  /* ADMIN SEARCH */
+  .admin-search-bar { display:flex; gap:10px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+  .admin-search-bar input { flex:1; min-width:180px; padding:9px 14px; border:1.5px solid #D1D9E0; border-radius:8px; font-size:14px; font-family:'Sarabun',sans-serif; }
+  .admin-search-bar input:focus { outline:none; border-color:var(--navy); }
+  .view-toggle { display:flex; gap:4px; }
+  .view-btn { padding:7px 12px; border:1.5px solid #D1D9E0; border-radius:6px; background:var(--white); cursor:pointer; font-size:16px; transition:all .2s; }
+  .view-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+  .act-filter { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+  .act-filter-btn { padding:5px 12px; border:1.5px solid #D1D9E0; border-radius:20px; background:var(--white); font-size:12px; font-family:'Sarabun',sans-serif; cursor:pointer; transition:all .2s; }
+  .act-filter-btn.active { background:var(--navy); border-color:var(--navy); color:var(--white); }
+
+  /* ADMIN CARDS */
+  .school-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:14px; }
+  .school-card { background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; border-top:3px solid var(--gold); }
+  .school-card .sc-name { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:2px; }
+  .school-card .sc-code { font-size:11px; color:var(--slate-light); margin-bottom:10px; }
+  .sc-acts { display:flex; flex-wrap:wrap; gap:4px; }
+  .sc-act-tag { font-size:10px; padding:2px 7px; border-radius:10px; background:#D1FAE5; color:#065F46; }
+  .sc-act-tag.pending { background:#F3F4F6; color:#9CA3AF; }
+  .sc-progress { font-size:11px; color:var(--slate-light); margin-top:8px; }
+  .sc-progress-bar { height:4px; background:#E2E8F0; border-radius:2px; margin-top:4px; }
+  .sc-progress-fill { height:4px; background:var(--green); border-radius:2px; transition:width .3s; }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:var(--navy); color:var(--white); padding:10px 12px; text-align:left; font-weight:600; white-space:nowrap; }
+  tbody tr:nth-child(even) { background:var(--cream); }
+  tbody tr:hover { background:#EAF0F8; }
+  tbody td { padding:9px 12px; border-bottom:1px solid var(--cream-dark); vertical-align:middle; }
+  .td-url a { color:var(--navy); text-decoration:none; font-size:12px; display:inline-flex; align-items:center; gap:4px; }
+  .td-url a:hover { text-decoration:underline; }
+  .no-data { text-align:center; color:var(--slate-light); font-size:13px; padding:30px; }
+
+  /* SETTINGS */
+  .settings-panel { background:var(--white); border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); margin-bottom:20px; }
+  .settings-panel h3 { font-size:15px; font-weight:700; color:var(--navy); margin-bottom:16px; }
+  .setting-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--cream-dark); gap:12px; }
+  .setting-row:last-child { border-bottom:none; }
+  .setting-row label { font-size:13px; font-weight:600; color:var(--slate); flex:0 0 160px; }
+  .setting-row input[type="text"] { flex:1; padding:7px 10px; border:1.5px solid #D1D9E0; border-radius:6px; font-size:13px; font-family:'Sarabun',sans-serif; }
+  .setting-row input[type="text"]:focus { outline:none; border-color:var(--navy); }
+  .toggle-wrap { display:flex; align-items:center; gap:10px; }
+  .toggle { position:relative; display:inline-block; width:44px; height:24px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:#CBD5E0; border-radius:24px; cursor:pointer; transition:.2s; }
+  .toggle-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
+  .toggle input:checked + .toggle-slider { background:var(--green); }
+  .toggle input:checked + .toggle-slider::before { transform:translateX(20px); }
+  .toggle-label { font-size:13px; color:var(--slate); }
+  .btn-save { background:var(--green); color:var(--white); border:none; padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; margin-top:16px; transition:background .2s; }
+  .btn-save:hover { background:#246038; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-logo">🏫</div>
+    <div class="header-text">
+      <h1>ระบบส่งผลงานโครงการโรงเรียนสุจริต</h1>
+      <p>สำนักงานเขตพื้นที่การศึกษาประถมศึกษายโสธร เขต 2</p>
+    </div>
+  </div>
+</header>
+<main class="main">
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-emblem">🏫</div>
+    <h2>ส่งผลงานกิจกรรมต่อต้านการทุจริต</h2>
+    <p>ประจำปีงบประมาณ พ.ศ. 2569 | สพป.ยโสธร เขต 2</p>
+    <div class="system-closed-banner" id="homeClosedBanner">⚠️ ระบบปิดรับผลงานแล้ว — ยังสามารถเข้าดูข้อมูลที่ส่งไปแล้วได้</div>
+    <button class="btn-primary btn-hero" onclick="goTo('page-login')">ส่งผลงาน</button>
+    <a class="btn-admin-link" onclick="goTo('page-admin-login')">👤</a>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="page" id="page-login">
+  <button class="btn-back" onclick="goTo('page-home')">← กลับ</button>
+  <div class="login-box">
+    <h2>เข้าสู่ระบบโรงเรียน</h2>
+    <p>กรอกรหัสโรงเรียน 8 หลักเพื่อเข้าสู่ระบบส่งผลงาน</p>
+    <div class="error-msg" id="loginError">รหัสโรงเรียนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง</div>
+    <div class="form-group">
+      <label>รหัสโรงเรียน</label>
+      <input class="form-control" type="text" id="schoolCodeInput" maxlength="8"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+        onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-primary btn-block" onclick="doLogin()">เข้าสู่ระบบ →</button>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="page" id="page-menu">
+  <div class="school-bar">
+    <div><div class="name" id="menuSchoolName"></div><div class="code" id="menuSchoolCode"></div></div>
+    <button class="logout-btn" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+  <div class="system-closed-banner" id="menuClosedBanner">⚠️ ระบบปิดรับผลงานแล้ว — ท่านสามารถดูผลงานที่ส่งไปแล้วได้เท่านั้น</div>
+  <p class="section-title">เลือกกิจกรรมที่ต้องการส่งผลงาน</p>
+  <div class="activity-grid" id="activityGrid"></div>
+  <div class="summary-section">
+    <h3>📋 สรุปผลงานที่ส่งแล้ว</h3>
+    <div id="summaryList"></div>
+  </div>
+</div>
+
+<!-- FORM -->
+<div class="page" id="page-form">
+  <button class="btn-back" onclick="goTo('page-menu')">← กลับเมนู</button>
+  <div class="form-card">
+    <h2 id="formTitle"></h2>
+    <div class="form-sub" id="formSub"></div>
+    <div class="level-tabs" id="levelTabs" style="display:none">
+      <button class="level-tab active" onclick="selectLevel('primary',this)">🎒 ระดับประถมศึกษา</button>
+      <button class="level-tab" onclick="selectLevel('secondary',this)">🎓 ระดับมัธยมศึกษา (ขยายโอกาส)</button>
+    </div>
+    <div class="success-banner" id="formSuccess">✅ บันทึกผลงานเรียบร้อยแล้ว</div>
+    <div class="error-msg" id="formError"></div>
+    <div id="urlFields"></div>
+    <button class="btn-primary btn-block" id="submitBtn" onclick="submitForm()" style="border-radius:8px;margin-top:8px;">💾 บันทึกผลงาน</button>
+    <p style="font-size:11px;color:#9CA3AF;text-align:center;margin-top:12px;">สามารถกลับมาแก้ไขได้จนกว่าแอดมินจะปิดระบบ</p>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="page" id="page-admin-login">
+  <button class="btn-back" onclick="goTo('page-home')">← กลับ</button>
+  <div class="login-box">
+    <h2>🔐 เข้าสู่ระบบผู้ดูแล</h2>
+    <p>สำหรับเจ้าหน้าที่ สพป.ยโสธร เขต 2 เท่านั้น</p>
+    <div class="error-msg" id="adminLoginError">ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+    <div class="form-group"><label>ชื่อผู้ใช้</label><input class="form-control" type="text" id="adminUser"></div>
+    <div class="form-group"><label>รหัสผ่าน</label><input class="form-control" type="password" id="adminPass" onkeydown="if(event.key==='Enter') doAdminLogin()"></div>
+    <button class="btn-primary btn-block" onclick="doAdminLogin()">เข้าสู่ระบบ →</button>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="page" id="page-admin">
+  <div class="admin-bar">
+    <div class="title">🛡️ แผงควบคุมผู้ดูแลระบบ</div>
+    <button class="logout-btn" onclick="doAdminLogout()">ออกจากระบบ</button>
+  </div>
+  <div class="stats-row" id="adminStats"></div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('byschool',this)">🏫 รายโรงเรียน</button>
+    <button class="admin-tab" onclick="switchAdminTab('byactivity',this)">📋 รายกิจกรรม</button>
+    <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ ตั้งค่า</button>
+  </div>
+  <div id="adminTabContent"></div>
+</div>
+
+</main>
+<script type="module">
+// ===== DATA =====
+const SCHOOLS = {"35020001":"บ้านดงมะไฟ","35020002":"บ้านคำครตา","35020003":"บ้านโคกก่องดอนนกชุม(อ่างประชานุกูล)","35020004":"บ้านกุดกว้าง","35020005":"บ้านคำแขนศอก","35020006":"บ้านโคกกลางหนองแตะแหละ","35020007":"บ้านหนองลาดควาย","35020008":"บ้านสีสุก","35020009":"บ้านดู่ลาด","35020010":"บ้านโสกผักหวาน","35020011":"บ้านเสาเล้า","35020013":"บ้านทรายมูล(ทรายมูลประชาราษฏร์)","35020014":"ชุมชนบ้านโคกยาว","35020015":"บ้านนาโป่ง","35020016":"บ้านเหล่าเมย","35020017":"บ้านหนองไก่ขาว(ฉวีบรรณสารพิจิตรอุปถัมภ์)","35020018":"บ้านดอนหวาย","35020019":"บ้านนาเวียง","35020020":"บ้านโป่ง(คำประชานุกูล)","35020021":"บ้านหนองแวง","35020022":"บ้านบะคอม","35020023":"บ้านสร้างช้างไผ่หนองไร่มิตรภาพที่ 143","35020024":"บ้านโคกกลาง","35020025":"บ้านนาเรียง","35020026":"ชุมชนบ้านกำแมด","35020027":"บ้านกุดหิน","35020028":"บ้านหนองตาไก้","35020029":"บ้านหนองเหี่ย","35020030":"โรงเรียนบ้านโนนยาง","35020031":"บ้านหัวงัว(อุสุภราชวิทยาคาร)","35020033":"บ้านหนองเมืองกลาง","35020034":"บ้านสองคร","35020036":"บ้านหนองบอน","35020037":"บ้านหนองเรือ","35020038":"บ้านหนองแก","35020039":"อนุบาลกุดชุมพัฒนา(ศรีวิสารรังสรรค์)","35020040":"บ้านเหล่าตำแย","35020041":"บ้านคำน้ำสร้าง","35020042":"บ้านเที่ยงนาเรียง","35020043":"บ้านดงสำราญ","35020044":"บ้านภูถ้ำพระพรเจริญ","35020045":"บ้านนาโส่","35020046":"บ้านโสกท่าลาดพัฒนา","35020047":"บ้านกุดแดง","35020048":"บ้านนาซึม","35020049":"ชุมชนประชาสรรค์","35020050":"ชุมชนบ้านโนนเปือย(มหาพิมพ์สงเคราะห์)","35020051":"บ้านผักกะย่า","35020052":"บ้านหวายกุดสว่าง","35020053":"บ้านสุขเกษม","35020054":"บ้านสุขเกษม(สาขาบ้านคำม่วงไข่)","35020055":"บ้านโพนงามเกี้ยงเก่า","35020056":"บ้านแดงหนองแซง","35020057":"บ้านคำเลา","35020058":"บ้านม่วง","35020059":"บ้านสร้างแต้นาประเสริฐ","35020060":"บ้านนาทม","35020061":"บ้านโคกศรี","35020062":"บ้านหนองหว้า","35020063":"บ้านหนองหมี","35020064":"บ้านกุดไกรสร","35020065":"บ้านคำบอนศรีชุมพล","35020066":"บ้านโพนดินแดง","35020067":"บ้านหนองแหน","35020068":"บ้านคำผักหนาม","35020069":"บ้านโนนประทาย","35020070":"บ้านคำก้าว","35020071":"บ้านโนนใหญ่","35020072":"บ้านหัวนา","35020073":"โรงเรียนบ้านหนองบัวบาน","35020074":"บ้านโสกน้ำขาว","35020075":"บ้านห้วยแก้งหนองศาลา","35020076":"บ้านนิคม","35020077":"บ้านหนองบาก","35020078":"บ้านเชียงเครือคำสร้างบ่อ","35020079":"บ้านโคกพระเจ้าโนนรัง","35020080":"บ้านม่วงไข่","35020081":"บ้านกระจาย","35020082":"บ้านคำเกิด","35020083":"บ้านหนองสำโรง","35020084":"บ้านโคกสะอาดใหม่สามัคคี","35020085":"บ้านนาดี(คุรุประชารัฐ)","35020086":"บ้านดงสวาง","35020087":"บ้านหนองแข้","35020088":"บ้านหนองชุม","35020089":"บ้านโคกกลาง","35020090":"บ้านโคกสุวรรณ","35020091":"บ้านโคกนาโก","35020092":"บ้านคำกลาง","35020093":"บ้านเซซ่งพัฒนา","35020094":"บ้านท่าลาดโนนตูม","35020095":"ชุมชนบ้านเชียงเพ็ง","35020096":"บ้านเซโนนม่วง","35020097":"บ้านกลางสระเกษ","35020098":"อนุบาลป่าติ้ว(โพธาภินันท์นุกูล)","35020099":"บ้านหนองแสงโคกสะอาด","35020100":"บ้านโพธิญาณ","35020101":"บ้านโพธิ์ไทรโพธิ์ศรี","35020102":"บ้านป่าตอง","35020103":"ชุมชนบ้านศรีฐาน","35020104":"บ้านเตาไห","35020105":"บ้านกุดสำโรง","35020106":"บ้านกุดแข้ด่อนหนองบัว","35020107":"บ้านกุดเชียงหมี","35020108":"บ้านกุดขุ่นสวาสดิ์","35020109":"บ้านห้วยยาง","35020110":"บ้านแก้งนาคำ","35020112":"บ้านกุดมะฮงดงสวาง","35020113":"บ้านนาโพธิ์อ่างสร้างหิน","35020114":"บ้านดอนม่วงป่าโมง","35020115":"บ้านมันปลา","35020116":"บ้านกุดแห่","35020117":"บ้านสมสะอาด","35020118":"บ้านคำเกิ่ง","35020119":"กุดคอก่านโคกสำราญโนนสวรรค์","35020120":"บ้านหินสิ่ว","35020121":"บ้านหนองยางห้วยสะแบก","35020122":"บ้านดอนมะซ่อม","35020123":"น้อมเกล้า","35020124":"บ้านหนองแคนน้อย","35020125":"บ้านโคกก่อง","35020126":"บ้านช่องเม็ก","35020127":"บ้านหนองเลิงคำ","35020128":"บ้านบุ่งค้า","35020129":"บ้านป่าขี้ยาง","35020131":"บ้านโคกเจริญ","35020132":"บ้านหนองแคน","35020133":"บ้านศรีแก้ว","35020134":"บ้านโคกใหญ่","35020135":"บ้านศรีสว่าง","35020136":"บ้านแสนสำราญ","35020137":"บ้านสร้างมิ่งมิตรภาพที่ 191","35020138":"บ้านโนนหาด","35020139":"บ้านโคกกอกหินเหล็กไฟ","35020141":"บ้านคึมยาว","35020142":"บ้านท่าลาดเหล่าอาภรณ์","35020143":"บ้านหนองโสน","35020145":"บ้านดอนฮี","35020146":"บ้านม่วงกาชัง","35020147":"บ้านกุดโจด","35020148":"บ้านนาจาน","35020149":"บ้านพรหมนิยม","35020150":"บ้านแยประชาสรรค์","35020151":"บ้านคึมชาดตาดบกศรีสมพร","35020152":"อนุบาลเลิงนกทา","35020153":"บ้านด่าน","35020154":"บ้านโป่งหนองสิม","35020155":"บ้านโคกสะอาดเกษตรพัฒนา","35020156":"บ้านสามัคคี","35020157":"บ้านหวาย","35020158":"บ้านโคกสูงอ่างสมบูรณ์","35020159":"บ้านนาเซแสงวิไล","35020160":"นาจานเจริญวิทย์","35020161":"บ้านป่าชาด","35020162":"บ้านหนองบึง","35020163":"บ้านท่าศิลา","35020165":"ชุมชนห้องแซงวิทยา","35020166":"บ้านห้องแซง","35020167":"บ้านดงยาง(คุรุราษฏร์บำรุง)","35020168":"บ้านห้องคลองร่องคำ","35020169":"บ้านโพง","35020170":"บ้านโนนแดง","35020171":"บ้านคำเตย","35020172":"บ้านหนองซ่งแย้","35020173":"บ้านดงสวรรค์","35020174":"บ้านหนองลุมพุก","35020175":"บ้านหนองสนม","35020176":"บ้านพืชคาม","35020177":"บ้านหนองสองห้องทรัพย์เจริญ","35020178":"บ้านคำไผ่โนนบ้านใหม่","35020179":"บ้านพอกโนนหนองผือคำไผ่ใต้","35020180":"บ้านโสกน้ำใส","35020181":"บ้านหนองนกเขียน","35020182":"บ้านป่าตาว","35020183":"บ้านไทยเจริญ","35020184":"บ้านสามแยกภูกอย","35020185":"บ้านห้วยยาง(คุรุประชาสรรค์)","35020186":"บ้านไทยเจริญ (สาขาบ้านเทพเจริญ)","35020187":"บ้านน้ำคำ","35020188":"บ้านคำสร้างช้าง","35020189":"บ้านโชคชัยพรตาดไฮ","35020190":"บ้านนาเฮืองนางช้างเฒ่า","35020191":"บ้านเหล่าหันทราย","35020192":"บ้านโนนแดงประชานุเคราะห์","35020193":"บ้านส้มผ่อ","35020194":"บ้านนางาม"};
+
+const ACTIVITIES = [
+  {id:'company',      icon:'🏢', title:'บริษัทสร้างการดี',                   hasLevel:false},
+  {id:'lesson_teacher', icon:'👩‍🏫', title:'ถอดบทเรียนครู',                    hasLevel:false},
+  {id:'lesson_director',icon:'👔', title:'ถอดบทเรียนผู้บริหาร',               hasLevel:false},
+  {id:'film',         icon:'🎬', title:'ภาพยนตร์สั้น\nต่อต้านการทุจริต',    hasLevel:true},
+  {id:'photo',        icon:'📷', title:'ประกวดภาพถ่าย\nต่อต้านการทุจริต',   hasLevel:true},
+];
+
+const FIELD_DEFS = {
+  company:         [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
+  lesson_teacher:  [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
+  lesson_director: [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
+  film: [
+    {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบรายงาน, โปสเตอร์', type:'link'},
+    {id:'url2', label:'ลิงก์ไฟล์นำเสนอผลงานภาพยนตร์สั้น', hint:'Google Drive หรือ YouTube', type:'video'},
+    {id:'url3', label:'ลิงก์ภาพยนตร์ YouTube', hint:'วาง URL จาก YouTube', type:'video'},
+  ],
+  photo: [
+    {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบเสนอแนวความคิด', type:'link'},
+    {id:'url2', label:'ภาพถ่าย', hint:'ลิงก์ไฟล์รูปภาพจาก Google Drive (แชร์แบบทุกคนมีลิงก์)', type:'photo'},
+  ],
+};
+
+// ===== STATE =====
+let currentSchoolCode = null;
+let currentActivity = null;
+let currentLevel = 'primary';
+window.adminViewMode = 'card';
+window.adminActFilter = 'all';
+window.adminSearch = '';
+let adminCurrentTab = 'byschool';
+
+// ===== STORAGE =====
+// ===== NAV =====
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ===== URL UTILITIES =====
+function getYouTubeId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function getDriveFileId(url) {
+  const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  return m ? m[1] : null;
+}
+function getDriveVideoId(url) {
+  // Google Drive video share or open links
+  const m = url.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([^/&?]+)/);
+  return m ? m[1] : null;
+}
+function detectVideoEmbed(url) {
+  const ytId = getYouTubeId(url);
+  if (ytId) return {type:'youtube', embedUrl:`https://www.youtube.com/embed/${ytId}?rel=0`};
+  const dvId = getDriveVideoId(url);
+  if (dvId) return {type:'drive', embedUrl:`https://drive.google.com/file/d/${dvId}/preview`};
+  return null;
+}
+function getDriveImageUrl(url) {
+  const id = getDriveFileId(url);
+  if (!id) return null;
+  return `https://drive.google.com/thumbnail?id=${id}&sz=w600`;
+}
+
+// ===== HOME =====
+function initHome() {
+  const s = loadSettings();
+  document.getElementById('homeClosedBanner').classList.toggle('show', !s.systemOpen);
+}
+
+// ===== LOGIN =====
+function doLogin() {
+  const code = document.getElementById('schoolCodeInput').value.trim();
+  if (!SCHOOLS[code]) { document.getElementById('loginError').classList.add('show'); return; }
+  document.getElementById('loginError').classList.remove('show');
+  currentSchoolCode = code;
+  renderMenu();
+  goTo('page-menu');
+}
+function doLogout() {
+  currentSchoolCode = null;
+  document.getElementById('schoolCodeInput').value = '';
+  initHome();
+  goTo('page-home');
+}
+
+// ===== MENU =====
+function renderMenu() {
+  const s = loadSettings();
+  document.getElementById('menuSchoolName').textContent = SCHOOLS[currentSchoolCode];
+  document.getElementById('menuSchoolCode').textContent = 'รหัส ' + currentSchoolCode;
+  document.getElementById('menuClosedBanner').classList.toggle('show', !s.systemOpen);
+
+  const grid = document.getElementById('activityGrid');
+  grid.innerHTML = '';
+  ACTIVITIES.forEach(act => {
+    const status = getActivityStatus(act);
+    const card = document.createElement('div');
+    card.className = 'activity-card';
+    card.innerHTML = `
+      <div class="status-dot ${status==='done'?'done':status==='partial'?'partial':''}"></div>
+      <div class="act-icon">${act.icon}</div>
+      <div class="act-title">${act.title.replace('\n','<br>')}</div>
+      <div class="act-sub">${act.hasLevel?'2 ระดับ • คลิกเพื่อส่ง':'คลิกเพื่อส่ง'}</div>`;
+    card.onclick = () => openForm(act);
+    grid.appendChild(card);
+  });
+  renderSummary();
+}
+
+function getActivityStatus(act) {
+  if (!act.hasLevel) return getSubmission(currentSchoolCode,act.id,null) ? 'done' : 'none';
+  const p = getSubmission(currentSchoolCode,act.id,'primary');
+  const s = getSubmission(currentSchoolCode,act.id,'secondary');
+  if (p && s) return 'done';
+  if (p || s) return 'partial';
+  return 'none';
+}
+
+function renderSummary() {
+  const rows = [];
+  ACTIVITIES.forEach(act => {
+    if (!act.hasLevel) {
+      const s = getSubmission(currentSchoolCode,act.id,null);
+      rows.push(`<div class="summary-row"><span class="act-name">${act.icon} ${act.title.replace('\n',' ')}</span>${s?'<span class="tag-done">✓ ส่งแล้ว</span>':'<span class="tag-pending">ยังไม่ส่ง</span>'}</div>`);
+    } else {
+      ['primary','secondary'].forEach(lv => {
+        const s = getSubmission(currentSchoolCode,act.id,lv);
+        const lvLabel = lv==='primary'?'ประถม':'ม.ต้น';
+        rows.push(`<div class="summary-row"><span class="act-name">${act.icon} ${act.title.replace('\n',' ')} — ${lvLabel}</span>${s?'<span class="tag-done">✓ ส่งแล้ว</span>':'<span class="tag-pending">ยังไม่ส่ง</span>'}</div>`);
+      });
+    }
+  });
+  document.getElementById('summaryList').innerHTML = rows.join('');
+}
+
+// ===== FORM =====
+function openForm(act) {
+  currentActivity = act;
+  currentLevel = 'primary';
+  document.getElementById('formTitle').textContent = act.title.replace('\n',' ');
+  document.getElementById('formSub').textContent = act.hasLevel ? 'เลือกระดับชั้นแล้วกรอก URL ผลงาน' : 'กรอก URL ผลงานที่ต้องการส่ง';
+  const tabs = document.getElementById('levelTabs');
+  if (act.hasLevel) {
+    tabs.style.display = 'flex';
+    tabs.querySelectorAll('.level-tab').forEach((t,i) => t.classList.toggle('active',i===0));
+  } else { tabs.style.display = 'none'; }
+  document.getElementById('formSuccess').classList.remove('show');
+  document.getElementById('formError').classList.remove('show');
+  const s = loadSettings();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = !s.systemOpen;
+  btn.style.opacity = s.systemOpen ? '1' : '0.5';
+  renderUrlFields();
+  goTo('page-form');
+}
+
+function selectLevel(level, btn) {
+  currentLevel = level;
+  document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('formSuccess').classList.remove('show');
+  document.getElementById('formError').classList.remove('show');
+  renderUrlFields();
+}
+
+function renderUrlFields() {
+  const act = currentActivity;
+  const level = act.hasLevel ? currentLevel : null;
+  const fields = FIELD_DEFS[act.id] || [{id:'url1',label:'ลิงก์ผลงาน',hint:'',type:'link'}];
+  const existing = getSubmission(currentSchoolCode, act.id, level) || {};
+
+  document.getElementById('urlFields').innerHTML = fields.map(f => {
+    const val = existing[f.id] || '';
+    let preview = '';
+    if (val) {
+      if (f.type === 'video') {
+        const embed = detectVideoEmbed(val);
+        if (embed) preview = `<div class="video-preview" id="prev_${f.id}"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div><a class="video-open-link" href="${val}" target="_blank">↗ เปิดในแท็บใหม่</a>`;
+      } else if (f.type === 'photo') {
+        const imgUrl = getDriveImageUrl(val);
+        if (imgUrl) preview = `<div class="photo-preview"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.innerHTML='<div class=\\'photo-err\\'>ไม่สามารถแสดงพรีวิวได้ — ตรวจสอบว่าลิงก์แชร์แบบสาธารณะ</div>'"></div>`;
+      }
+    }
+    return `<div class="url-field-group">
+      <label>🔗 ${f.label}</label>
+      <input class="form-control" type="url" id="${f.id}" placeholder="https://"
+        value="${val}" oninput="onUrlInput('${f.id}','${f.type}')">
+      ${f.hint ? `<div class="url-hint">${f.hint}</div>` : ''}
+      <div id="preview_${f.id}">${preview}</div>
+    </div>`;
+  }).join('');
+}
+
+function onUrlInput(fieldId, type) {
+  const url = document.getElementById(fieldId).value.trim();
+  const previewEl = document.getElementById('preview_' + fieldId);
+  if (!url || !url.startsWith('http')) { previewEl.innerHTML = ''; return; }
+  if (type === 'video') {
+    const embed = detectVideoEmbed(url);
+    if (embed) previewEl.innerHTML = `<div class="video-preview"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div><a class="video-open-link" href="${url}" target="_blank">↗ เปิดในแท็บใหม่</a>`;
+    else previewEl.innerHTML = '';
+  } else if (type === 'photo') {
+    const imgUrl = getDriveImageUrl(url);
+    if (imgUrl) previewEl.innerHTML = `<div class="photo-preview"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.innerHTML='<div class=\\'photo-err\\'>ไม่สามารถแสดงพรีวิว — ตรวจสอบการแชร์สาธารณะ</div>'"></div>`;
+    else previewEl.innerHTML = '';
+  }
+}
+
+function submitForm() {
+  const s = loadSettings();
+  if (!s.systemOpen) return;
+  const act = currentActivity;
+  const level = act.hasLevel ? currentLevel : null;
+  const fields = FIELD_DEFS[act.id] || [{id:'url1',label:'ลิงก์ผลงาน'}];
+  const errEl = document.getElementById('formError');
+  const sucEl = document.getElementById('formSuccess');
+  const values = {};
+  for (const f of fields) {
+    const val = document.getElementById(f.id)?.value.trim() || '';
+    if (!val) { errEl.textContent = `กรุณากรอก "${f.label}" ก่อนบันทึก`; errEl.classList.add('show'); sucEl.classList.remove('show'); return; }
+    if (!val.startsWith('http')) { errEl.textContent = `"${f.label}" ต้องเป็น URL ขึ้นต้นด้วย https://`; errEl.classList.add('show'); sucEl.classList.remove('show'); return; }
+    values[f.id] = val;
+  }
+  errEl.classList.remove('show');
+  setSubmission(currentSchoolCode, act.id, level, values);
+  sucEl.classList.add('show');
+  setTimeout(() => sucEl.classList.remove('show'), 3000);
+  // อัปเดต summary ทันที
+  renderSummary();
+  // อัปเดต grid dots
+  renderMenu();
+  // กลับไปแสดง form อยู่
+  goTo('page-form');
+  renderUrlFields();
+}
+
+// ===== ADMIN =====
+function doAdminLogin() {
+  const u = document.getElementById('adminUser').value.trim();
+  const p = document.getElementById('adminPass').value;
+  if (u==='yst2' && p==='35020000') {
+    document.getElementById('adminLoginError').classList.remove('show');
+    renderAdmin(); goTo('page-admin');
+  } else { document.getElementById('adminLoginError').classList.add('show'); }
+}
+function doAdminLogout() {
+  document.getElementById('adminUser').value='';
+  document.getElementById('adminPass').value='';
+  goTo('page-home');
+}
+
+function renderAdmin() {
+  renderAdminStats();
+  switchAdminTab(adminCurrentTab, null);
+}
+
+function renderAdminStats() {
+  const all = loadSubmissions();
+  const schoolsSubmitted = Object.keys(all).length;
+  const totalSchools = Object.keys(SCHOOLS).length;
+  let totalEntries = 0;
+  Object.values(all).forEach(s => { totalEntries += Object.keys(s).length; });
+  const complete = Object.values(all).filter(s => Object.keys(s).length >= 7).length;
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-card"><div class="num">${schoolsSubmitted}</div><div class="lbl">โรงเรียนที่ส่งแล้ว</div></div>
+    <div class="stat-card"><div class="num">${totalSchools-schoolsSubmitted}</div><div class="lbl">ยังไม่ส่ง</div></div>
+    <div class="stat-card"><div class="num">${totalEntries}</div><div class="lbl">รายการทั้งหมด</div></div>
+    <div class="stat-card"><div class="num">${complete}</div><div class="lbl">ส่งครบทุกกิจกรรม</div></div>`;
+}
+
+function switchAdminTab(tab, btn) {
+  adminCurrentTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const idx = ['byschool','byactivity','settings'].indexOf(tab);
+    document.querySelectorAll('.admin-tab')[idx]?.classList.add('active');
+  }
+  const content = document.getElementById('adminTabContent');
+  if (tab==='byschool') content.innerHTML = renderBySchoolTab();
+  else if (tab==='byactivity') content.innerHTML = renderByActivityTab();
+  else content.innerHTML = renderSettingsTab();
+}
+
+// ===== ADMIN CONSTANTS (global) =====
+const ACT_KEYS = ['company','lesson_teacher','lesson_director','film_primary','film_secondary','photo_primary','photo_secondary'];
+const ACT_LABELS = {company:'บริษัทฯ',lesson_teacher:'ถอดบทเรียน ครู',lesson_director:'ถอดบทเรียน ผู้บริหาร',film_primary:'ภาพยนตร์ (ประถม)',film_secondary:'ภาพยนตร์ (ม.ต้น)',photo_primary:'ภาพถ่าย (ประถม)',photo_secondary:'ภาพถ่าย (ม.ต้น)'};
+const ACT_KEY_LABELS = {company:'บริษัทสร้างการดี',lesson_teacher:'ถอดบทเรียนครู',lesson_director:'ถอดบทเรียนผู้บริหาร',film_primary:'ภาพยนตร์ (ประถม)',film_secondary:'ภาพยนตร์ (ม.ต้น)',photo_primary:'ภาพถ่าย (ประถม)',photo_secondary:'ภาพถ่าย (ม.ต้น)'};
+
+// ===== BY SCHOOL TAB =====
+function renderBySchoolTab() {
+  return `
+    <div class="admin-search-bar">
+      <input type="text" placeholder="🔍 ค้นหาชื่อหรือรหัสโรงเรียน..." value="${window.adminSearch}"
+        oninput="window.adminSearch=this.value; document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()">
+      <div class="view-toggle">
+        <button class="view-btn ${window.adminViewMode==='card'?'active':''}" onclick="window.adminViewMode='card';document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()" title="การ์ด">⊞</button>
+        <button class="view-btn ${window.adminViewMode==='list'?'active':''}" onclick="window.adminViewMode='list';document.getElementById('schoolListWrap').innerHTML=renderSchoolRows()" title="รายการ">☰</button>
+      </div>
+    </div>
+    <div id="schoolListWrap">${renderSchoolRows()}</div>`;
+}
+
+function renderSchoolRows() {
+  const all = loadSubmissions();
+  const q = window.adminSearch.toLowerCase();
+  const filtered = Object.entries(SCHOOLS).filter(([code,name]) =>
+    name.toLowerCase().includes(q) || code.includes(q));
+  if (!filtered.length) return `<div class="no-data">ไม่พบโรงเรียนที่ค้นหา</div>`;
+  if (window.adminViewMode === 'card') {
+    const cards = filtered.map(([code,name]) => {
+      const subs = all[code] || {};
+      const count = Object.keys(subs).length;
+      const pct = Math.round(count/7*100);
+      const tags = ACT_KEYS.map(k => `<span class="sc-act-tag ${subs[k]?'':'pending'}">${ACT_LABELS[k]}</span>`).join('');
+      return `<div class="school-card">
+        <div class="sc-name">${name}</div>
+        <div class="sc-code">${code}</div>
+        <div class="sc-acts">${tags}</div>
+        <div class="sc-progress">${count}/7 กิจกรรม</div>
+        <div class="sc-progress-bar"><div class="sc-progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    }).join('');
+    return `<div class="school-cards">${cards}</div>`;
+  } else {
+    const rows = filtered.map(([code,name]) => {
+      const subs = all[code] || {};
+      const count = Object.keys(subs).length;
+      const cells = ACT_KEYS.map(k => {
+        if (!subs[k]) return `<td style="text-align:center;color:#CBD5E0">—</td>`;
+        const links = ['url1','url2','url3'].filter(u => subs[k][u]).map(u =>
+          `<a href="${subs[k][u]}" target="_blank" title="${u}">🔗</a>`).join(' ');
+        return `<td style="text-align:center">${links || '✅'}</td>`;
+      }).join('');
+      return `<tr><td>${code}</td><td>${name}</td>${cells}<td style="text-align:center;font-weight:700;color:${count>=7?'#2D7D46':'#9CA3AF'}">${count}/7</td></tr>`;
+    }).join('');
+    return `<div class="table-wrap"><table>
+      <thead><tr><th>รหัส</th><th>ชื่อโรงเรียน</th>${ACT_KEYS.map(k=>`<th style="font-size:11px">${ACT_LABELS[k]}</th>`).join('')}<th>รวม</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+}
+
+// ===== BY ACTIVITY TAB =====
+function renderByActivityTab() {
+  const ACT_OPTIONS = [
+    {key:'all',label:'ทั้งหมด'},{key:'company',label:'บริษัทสร้างการดี'},
+    {key:'lesson_teacher',label:'ถอดบทเรียนครู'},{key:'lesson_director',label:'ถอดบทเรียนผู้บริหาร'},
+    {key:'film_primary',label:'ภาพยนตร์ (ประถม)'},{key:'film_secondary',label:'ภาพยนตร์ (ม.ต้น)'},
+    {key:'photo_primary',label:'ภาพถ่าย (ประถม)'},{key:'photo_secondary',label:'ภาพถ่าย (ม.ต้น)'},
+  ];
+  const filterBtns = ACT_OPTIONS.map(o =>
+    `<button class="act-filter-btn ${window.adminActFilter===o.key?'active':''}"
+      onclick="window.adminActFilter='${o.key}';document.getElementById('actTableWrap').innerHTML=renderActTable()">${o.label}</button>`
+  ).join('');
+  return `
+    <div class="admin-search-bar">
+      <input type="text" placeholder="🔍 ค้นหาชื่อหรือรหัสโรงเรียน..." value="${window.adminSearch}"
+        oninput="window.adminSearch=this.value;document.getElementById('actTableWrap').innerHTML=renderActTable()">
+    </div>
+    <div class="act-filter">${filterBtns}</div>
+    <div id="actTableWrap">${renderActTable()}</div>`;
+}
+
+function renderActTable() {
+  const all = loadSubmissions();
+  const q = window.adminSearch.toLowerCase();
+  let rows = '';
+  Object.entries(all).forEach(([code, subs]) => {
+    const name = SCHOOLS[code] || code;
+    if (q && !name.toLowerCase().includes(q) && !code.includes(q)) return;
+    Object.entries(subs).forEach(([key, val]) => {
+      if (window.adminActFilter !== 'all' && key !== window.adminActFilter) return;
+      const label = ACT_KEY_LABELS[key] || key;
+      const d = new Date(val.updatedAt);
+      const dateStr = d.toLocaleDateString('th-TH')+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+      const linkHtml = ['url1','url2','url3'].filter(u=>val[u]).map(u => {
+        const lbl = u==='url1'?'ลิงก์ 1':u==='url2'?'ลิงก์ 2':'ลิงก์ 3';
+        return `<a href="${val[u]}" target="_blank" style="display:block;font-size:11px;color:var(--navy);margin-bottom:2px">🔗 ${lbl}</a>`;
+      }).join('') || (val.url?`<a href="${val.url}" target="_blank" style="font-size:11px;color:var(--navy)">🔗 เปิดลิงก์</a>`:'—');
+      rows += `<tr><td>${code}</td><td>${name}</td><td>${label}</td><td>${linkHtml}</td><td style="font-size:11px;color:#9CA3AF">${dateStr}</td></tr>`;
+    });
+  });
+  if (!rows) return `<div class="no-data">ยังไม่มีการส่งผลงาน${window.adminActFilter!=='all'?' ในกิจกรรมนี้':''}</div>`;
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>รหัส</th><th>ชื่อโรงเรียน</th><th>กิจกรรม</th><th>ลิงก์</th><th>วันที่ส่ง</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+// ===== SETTINGS TAB =====
+const FIELD_LABEL_DEFS = [
+  {key:'company',        label:'บริษัทสร้างการดี',           fields:['url1']},
+  {key:'lesson_teacher', label:'ถอดบทเรียนครู',              fields:['url1']},
+  {key:'lesson_director',label:'ถอดบทเรียนผู้บริหาร',        fields:['url1']},
+  {key:'film_primary',   label:'ภาพยนตร์สั้น (ประถม)',       fields:['url1','url2','url3']},
+  {key:'film_secondary', label:'ภาพยนตร์สั้น (ม.ต้น)',       fields:['url1','url2','url3']},
+  {key:'photo_primary',  label:'ภาพถ่าย (ประถม)',            fields:['url1','url2']},
+  {key:'photo_secondary',label:'ภาพถ่าย (ม.ต้น)',            fields:['url1','url2']},
+];
+const DEFAULT_FIELD_LABELS = {
+  url1:'ลิงก์โฟลเดอร์ Google Drive', url2:'ลิงก์ผลงาน / ภาพถ่าย', url3:'ลิงก์ YouTube'
+};
+
+function renderSettingsTab() {
+  const s = loadSettings();
+  const fieldRows = FIELD_LABEL_DEFS.map(act => {
+    const rows = act.fields.map(fid => {
+      const settingKey = `${act.key}__${fid}`;
+      const currentLabel = s.fieldLabels?.[settingKey] || DEFAULT_FIELD_LABELS[fid];
+      return `<div class="setting-row" style="padding-left:12px">
+        <label style="flex:0 0 80px;font-size:12px;color:var(--slate-light)">${fid}</label>
+        <input type="text" value="${currentLabel}" id="fl_${settingKey}"
+          placeholder="${DEFAULT_FIELD_LABELS[fid]}">
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--navy);padding:8px 0 4px">${act.label}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="settings-panel">
+      <h3>🔒 สถานะระบบ</h3>
+      <div class="setting-row">
+        <label>เปิดรับผลงาน</label>
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" ${s.systemOpen?'checked':''} onchange="toggleSystem(this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label" id="systemStatusLabel">${s.systemOpen?'เปิดอยู่':'ปิดแล้ว'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="settings-panel">
+      <h3>📝 ชื่อช่องกรอกแต่ละกิจกรรม</h3>
+      ${fieldRows}
+      <button class="btn-save" onclick="saveFieldLabels()">💾 บันทึกการตั้งค่า</button>
+    </div>`;
+}
+
+function saveFieldLabels() {
+  const s = loadSettings();
+  if (!s.fieldLabels) s.fieldLabels = {};
+  FIELD_LABEL_DEFS.forEach(act => {
+    act.fields.forEach(fid => {
+      const settingKey = `${act.key}__${fid}`;
+      const el = document.getElementById('fl_' + settingKey);
+      if (el) s.fieldLabels[settingKey] = el.value.trim() || DEFAULT_FIELD_LABELS[fid];
+    });
+  });
+  saveSettings(s);
+  const btn = event.target;
+  btn.textContent = '✅ บันทึกแล้ว';
+  setTimeout(() => btn.textContent = '💾 บันทึกการตั้งค่า', 2000);
+}
+
+function getFieldLabel(actId, level, fieldId) {
+  const s = loadSettings();
+  const actKey = level ? `${actId}_${level}` : actId;
+  const settingKey = `${actKey}__${fieldId}`;
+  return s.fieldLabels?.[settingKey] || DEFAULT_FIELD_LABELS[fieldId] || 'ลิงก์ผลงาน';
+}
+
+function toggleSystem(val) {
+  const s = loadSettings();
+  s.systemOpen = val;
+  saveSettings(s);
+  document.getElementById('systemStatusLabel').textContent = val ? 'เปิดอยู่' : 'ปิดแล้ว';
+}
+
+// ===== FIREBASE =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCu9pJEQupfw8EcnvHk1hSCNcuBRfa6k3I",
+  authDomain: "uprightyst2.firebaseapp.com",
+  projectId: "uprightyst2",
+  storageBucket: "uprightyst2.firebasestorage.app",
+  messagingSenderId: "1048000723641",
+  appId: "1:1048000723641:web:c8f57e811939e8fd5f7968"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// Override storage functions to use Firestore
+async function loadSubmissionsAsync() {
+  // returns full snapshot {schoolCode: {actKey: {url1,updatedAt,...}}}
+  // we cache in memory for sync reads
+  return window._submissionsCache || {};
+}
+
+function loadSubmissions() {
+  return window._submissionsCache || {};
+}
+
+function saveSubmissions(data) {
+  // not used directly — use setSubmission instead
+}
+
+async function setSubmission(code, actId, level, values) {
+  const key = level ? `${actId}_${level}` : actId;
+  const payload = {...values, updatedAt: new Date().toISOString()};
+  // update cache immediately for instant UI
+  if (!window._submissionsCache) window._submissionsCache = {};
+  if (!window._submissionsCache[code]) window._submissionsCache[code] = {};
+  window._submissionsCache[code][key] = payload;
+  // write to Firestore
+  const ref = doc(db, 'submissions', code);
+  const snap = await getDoc(ref);
+  const existing = snap.exists() ? snap.data() : {};
+  await setDoc(ref, {...existing, [key]: payload});
+}
+
+function getSubmission(code, actId, level) {
+  const key = level ? `${actId}_${level}` : actId;
+  return (window._submissionsCache?.[code]?.[key]) || null;
+}
+
+// Settings in Firestore
+async function loadSettingsAsync() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'settings'));
+    if (snap.exists()) {
+      window._settingsCache = snap.data();
+      return snap.data();
+    }
+  } catch(e) {}
+  return {systemOpen:true, fieldLabels:{}};
+}
+
+function loadSettings() {
+  return window._settingsCache || {systemOpen:true, fieldLabels:{}};
+}
+
+function saveSettings(s) {
+  window._settingsCache = s;
+  setDoc(doc(db, 'config', 'settings'), s).catch(console.error);
+}
+
+// Listen for realtime updates from Firestore
+function startFirebaseListeners() {
+  // listen to all submissions
+  onSnapshot(collection(db, 'submissions'), snap => {
+    if (!window._submissionsCache) window._submissionsCache = {};
+    snap.docChanges().forEach(change => {
+      if (change.type === 'removed') {
+        delete window._submissionsCache[change.doc.id];
+      } else {
+        window._submissionsCache[change.doc.id] = change.doc.data();
+      }
+    });
+    // refresh admin if open
+    if (document.getElementById('page-admin').classList.contains('active')) {
+      renderAdminStats();
+      const content = document.getElementById('adminTabContent');
+      if (adminCurrentTab==='byschool') content.innerHTML = renderBySchoolTab();
+      else if (adminCurrentTab==='byactivity') content.innerHTML = renderByActivityTab();
+    }
+  });
+  // listen to settings
+  onSnapshot(doc(db, 'config', 'settings'), snap => {
+    if (snap.exists()) window._settingsCache = snap.data();
+  });
+}
+
+// ===== INIT =====
+async function init() {
+  window._submissionsCache = {};
+  window._settingsCache = {systemOpen:true, fieldLabels:{}};
+  await Promise.all([loadSettingsAsync(), loadSubmissionsAsync()]);
+  startFirebaseListeners();
+  initHome();
+}
+
+// Expose all functions globally (needed for type="module" scope)
+Object.assign(window, {
+  goTo, doLogin, doLogout, confirmSchool,
+  openForm, selectLevel, onUrlInput, submitForm,
+  doAdminLogin, doAdminLogout, renderAdmin,
+  switchAdminTab, renderSchoolRows, renderActTable,
+  saveFieldLabels, toggleSystem, window.adminSearch, window.adminViewMode, window.adminActFilter,
+  renderBySchoolTab, renderByActivityTab, renderSettingsTab
+});
+
+init();
+</script>
+</body>
+</html>
