@@ -875,11 +875,11 @@ async function init() {
 
 // Expose all functions globally (needed for type="module" scope)
 Object.assign(window, {
-  goTo, doLogin, doLogout, confirmSchool,
+  goTo, doLogin, doLogout,
   openForm, selectLevel, onUrlInput, submitForm,
   doAdminLogin, doAdminLogout, renderAdmin,
   switchAdminTab, renderSchoolRows, renderActTable,
-  saveFieldLabels, toggleSystem, window.adminSearch, window.adminViewMode, window.adminActFilter,
+  saveFieldLabels, toggleSystem,
   renderBySchoolTab, renderByActivityTab, renderSettingsTab
 });
 
