@@ -184,6 +184,19 @@
   .toggle-label { font-size:13px; color:var(--slate); }
   .btn-save { background:var(--green); color:var(--white); border:none; padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; margin-top:16px; transition:background .2s; }
   .btn-save:hover { background:#246038; }
+  /* MODAL TABS */
+  .modal-act-tab { padding:7px 14px; border:none; border-radius:8px 8px 0 0; font-size:13px; font-weight:600; font-family:'Sarabun',sans-serif; cursor:pointer; background:rgba(27,58,92,0.08); color:var(--slate); transition:all .15s; margin-bottom:-1px; }
+  .modal-act-tab.active { background:#fff; color:var(--navy); box-shadow:0 -2px 0 var(--gold) inset; }
+  /* EMBED CARDS */
+  .embed-card { background:var(--cream); border-radius:var(--radius); padding:16px; margin-bottom:14px; border-left:4px solid var(--gold); }
+  .embed-card .ec-label { font-size:12px; font-weight:700; color:var(--slate-light); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+  .embed-card .ec-video { border-radius:8px; overflow:hidden; background:#000; margin-bottom:10px; }
+  .embed-card .ec-video iframe { width:100%; height:240px; border:none; display:block; }
+  .embed-card .ec-link { display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; padding:7px 16px; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; transition:background .2s; }
+  .embed-card .ec-link:hover { background:var(--navy-light); }
+  .embed-card .ec-photo { border-radius:8px; overflow:hidden; max-height:260px; display:flex; align-items:center; justify-content:center; background:var(--cream-dark); margin-bottom:10px; }
+  .embed-card .ec-photo img { width:100%; max-height:260px; object-fit:contain; display:block; }
+  .no-sub-msg { text-align:center; color:var(--slate-light); font-size:14px; padding:40px 20px; }
 </style>
 </head>
 <body>
@@ -286,6 +299,21 @@
     <button class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ ตั้งค่า</button>
   </div>
   <div id="adminTabContent"></div>
+</div>
+
+<!-- SCHOOL DETAIL MODAL -->
+<div id="schoolModal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(18,40,64,0.55);overflow-y:auto;padding:20px 12px">
+  <div style="background:#fff;border-radius:14px;max-width:760px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,0.25);overflow:hidden">
+    <div style="background:linear-gradient(135deg,#122840,#1B3A5C);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div id="modalSchoolName" style="font-size:16px;font-weight:700"></div>
+        <div id="modalSchoolCode" style="font-size:12px;opacity:.7;margin-top:2px"></div>
+      </div>
+      <button onclick="closeSchoolModal()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:5px 16px;font-size:13px;font-family:'Sarabun',sans-serif;cursor:pointer">✕ ปิด</button>
+    </div>
+    <div id="modalActTabs" style="display:flex;gap:2px;padding:10px 12px 0;background:#F8F5EE;flex-wrap:wrap"></div>
+    <div id="modalActContent" style="padding:20px 22px 28px;min-height:180px"></div>
+  </div>
 </div>
 
 </main>
@@ -566,10 +594,113 @@ function renderAdminStats() {
   Object.values(all).forEach(s => { totalEntries += Object.keys(s).length; });
   const complete = Object.values(all).filter(s => Object.keys(s).length >= 7).length;
   document.getElementById('adminStats').innerHTML = `
-    <div class="stat-card"><div class="num">${schoolsSubmitted}</div><div class="lbl">โรงเรียนที่ส่งแล้ว</div></div>
-    <div class="stat-card"><div class="num">${totalSchools-schoolsSubmitted}</div><div class="lbl">ยังไม่ส่ง</div></div>
-    <div class="stat-card"><div class="num">${totalEntries}</div><div class="lbl">รายการทั้งหมด</div></div>
-    <div class="stat-card"><div class="num">${complete}</div><div class="lbl">ส่งครบทุกกิจกรรม</div></div>`;
+    <div class="stat-card" onclick="showSubmittedList()" style="cursor:pointer;border-top-color:var(--green)" title="คลิกดูรายชื่อ">
+      <div class="num" style="color:var(--green)">${schoolsSubmitted}</div>
+      <div class="lbl">โรงเรียนที่ส่งแล้ว 🔍</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">${totalSchools-schoolsSubmitted}</div>
+      <div class="lbl">ยังไม่ส่ง</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">${totalEntries}</div>
+      <div class="lbl">รายการทั้งหมด</div>
+    </div>
+    <div class="stat-card" onclick="showCompletedList()" style="cursor:pointer;border-top-color:var(--gold)" title="คลิกดูรายชื่อ">
+      <div class="num" style="color:var(--navy)">${complete}</div>
+      <div class="lbl">ส่งครบทุกกิจกรรม 🔍</div>
+    </div>`;
+}
+
+// แสดงโรงเรียนที่ส่งแล้วในแท็บ byschool
+function showSubmittedList() {
+  const all = loadSubmissions();
+  window.adminSearch = '';
+  // switch to byschool tab and filter to submitted only
+  window._showOnlySubmitted = true;
+  window._showOnlyComplete = false;
+  switchAdminTab('byschool', null);
+}
+function showCompletedList() {
+  window._showOnlySubmitted = false;
+  window._showOnlyComplete = true;
+  switchAdminTab('byschool', null);
+}
+
+// ===== SCHOOL DETAIL MODAL =====
+let modalCurrentAct = null;
+
+function openSchoolModal(code) {
+  const all = loadSubmissions();
+  const subs = all[code] || {};
+  const submittedKeys = ACT_KEYS.filter(k => subs[k]);
+  if (!submittedKeys.length) return;
+
+  document.getElementById('modalSchoolName').textContent = SCHOOLS[code] || code;
+  document.getElementById('modalSchoolCode').textContent = 'รหัส ' + code;
+
+  // build tabs
+  const tabs = submittedKeys.map((k,i) => `
+    <button class="modal-act-tab ${i===0?'active':''}" onclick="switchModalTab('${code}','${k}',this)">
+      ${ACT_LABELS[k]}
+    </button>`).join('');
+  document.getElementById('modalActTabs').innerHTML = tabs;
+
+  // show first tab
+  modalCurrentAct = submittedKeys[0];
+  document.getElementById('modalActContent').innerHTML = renderModalActContent(code, submittedKeys[0]);
+
+  document.getElementById('schoolModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSchoolModal() {
+  document.getElementById('schoolModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function switchModalTab(code, actKey, btn) {
+  document.querySelectorAll('.modal-act-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('modalActContent').innerHTML = renderModalActContent(code, actKey);
+}
+
+function renderModalActContent(code, actKey) {
+  const all = loadSubmissions();
+  const sub = all[code]?.[actKey];
+  if (!sub) return `<div class="no-sub-msg">ยังไม่มีข้อมูล</div>`;
+
+  const actId = actKey.replace('_primary','').replace('_secondary','');
+  const fields = FIELD_DEFS[actId] || [{id:'url1',label:'ลิงก์ผลงาน',type:'link'}];
+  const levelLabel = actKey.endsWith('_primary') ? ' — ระดับประถมศึกษา' : actKey.endsWith('_secondary') ? ' — ระดับมัธยมศึกษา (ขยายโอกาส)' : '';
+
+  let html = `<div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:16px">${ACT_KEY_LABELS[actKey]}${levelLabel}</div>`;
+
+  fields.forEach(f => {
+    const url = sub[f.id];
+    if (!url) return;
+    html += `<div class="embed-card">`;
+    html += `<div class="ec-label">${f.label}</div>`;
+
+    if (f.type === 'video') {
+      const embed = detectVideoEmbed(url);
+      if (embed) {
+        html += `<div class="ec-video"><iframe src="${embed.embedUrl}" allowfullscreen></iframe></div>`;
+      }
+      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดลิงก์</a>`;
+    } else if (f.type === 'photo') {
+      const imgUrl = getDriveImageUrl(url);
+      if (imgUrl) html += `<div class="ec-photo"><img src="${imgUrl}" alt="ภาพถ่าย" onerror="this.parentElement.style.display='none'"></div>`;
+      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดภาพถ่าย</a>`;
+    } else {
+      html += `<a class="ec-link" href="${url}" target="_blank">↗ เปิดลิงก์</a>`;
+    }
+    html += `</div>`;
+  });
+
+  const d = new Date(sub.updatedAt);
+  html += `<div style="font-size:11px;color:var(--slate-light);margin-top:8px">ส่งเมื่อ ${d.toLocaleDateString('th-TH')} ${d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</div>`;
+  return html;
 }
 
 function switchAdminTab(tab, btn) {
@@ -608,20 +739,28 @@ function renderBySchoolTab() {
 function renderSchoolRows() {
   const all = loadSubmissions();
   const q = window.adminSearch.toLowerCase();
-  const filtered = Object.entries(SCHOOLS).filter(([code,name]) =>
+
+  let filtered = Object.entries(SCHOOLS).filter(([code,name]) =>
     name.toLowerCase().includes(q) || code.includes(q));
+
+  // filter by submitted/complete flags from stat cards
+  if (window._showOnlySubmitted) filtered = filtered.filter(([code]) => all[code]);
+  if (window._showOnlyComplete)  filtered = filtered.filter(([code]) => all[code] && Object.keys(all[code]).length >= 7);
+
   if (!filtered.length) return `<div class="no-data">ไม่พบโรงเรียนที่ค้นหา</div>`;
+
   if (window.adminViewMode === 'card') {
     const cards = filtered.map(([code,name]) => {
       const subs = all[code] || {};
       const count = Object.keys(subs).length;
       const pct = Math.round(count/7*100);
+      const hasAny = count > 0;
       const tags = ACT_KEYS.map(k => `<span class="sc-act-tag ${subs[k]?'':'pending'}">${ACT_LABELS[k]}</span>`).join('');
-      return `<div class="school-card">
+      return `<div class="school-card" ${hasAny?`onclick="openSchoolModal('${code}')" style="cursor:pointer"`:''}>
         <div class="sc-name">${name}</div>
         <div class="sc-code">${code}</div>
         <div class="sc-acts">${tags}</div>
-        <div class="sc-progress">${count}/7 กิจกรรม</div>
+        <div class="sc-progress">${count}/7 กิจกรรม ${hasAny?'• <span style="color:var(--navy);font-size:11px">คลิกดูรายละเอียด</span>':''}</div>
         <div class="sc-progress-bar"><div class="sc-progress-fill" style="width:${pct}%"></div></div>
       </div>`;
     }).join('');
@@ -630,13 +769,17 @@ function renderSchoolRows() {
     const rows = filtered.map(([code,name]) => {
       const subs = all[code] || {};
       const count = Object.keys(subs).length;
+      const hasAny = count > 0;
       const cells = ACT_KEYS.map(k => {
         if (!subs[k]) return `<td style="text-align:center;color:#CBD5E0">—</td>`;
         const links = ['url1','url2','url3'].filter(u => subs[k][u]).map(u =>
           `<a href="${subs[k][u]}" target="_blank" title="${u}">🔗</a>`).join(' ');
         return `<td style="text-align:center">${links || '✅'}</td>`;
       }).join('');
-      return `<tr><td>${code}</td><td>${name}</td>${cells}<td style="text-align:center;font-weight:700;color:${count>=7?'#2D7D46':'#9CA3AF'}">${count}/7</td></tr>`;
+      return `<tr ${hasAny?`onclick="openSchoolModal('${code}')" style="cursor:pointer"`:''}>
+        <td>${code}</td><td>${name}</td>${cells}
+        <td style="text-align:center;font-weight:700;color:${count>=7?'#2D7D46':'#9CA3AF'}">${count}/7</td>
+      </tr>`;
     }).join('');
     return `<div class="table-wrap"><table>
       <thead><tr><th>รหัส</th><th>ชื่อโรงเรียน</th>${ACT_KEYS.map(k=>`<th style="font-size:11px">${ACT_LABELS[k]}</th>`).join('')}<th>รวม</th></tr></thead>
@@ -832,6 +975,8 @@ function startFirebaseListeners() {
 }
 
 async function init() {
+  window._showOnlySubmitted = false;
+  window._showOnlyComplete = false;
   try {
     const settingsSnap = await db.collection('config').doc('settings').get();
     if (settingsSnap.exists) window._settingsCache = settingsSnap.data();
@@ -840,6 +985,11 @@ async function init() {
   } catch(e) { console.warn('Firebase init error:', e); }
   startFirebaseListeners();
   initHome();
+
+  // close modal on backdrop click
+  document.getElementById('schoolModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSchoolModal();
+  });
 }
 
 init();
