@@ -396,8 +396,8 @@ const ACTIVITIES = [
 
 const FIELD_DEFS = {
   company:         [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
-  lesson_teacher:  [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
-  lesson_director: [{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
+  lesson_teacher:  [{id:'title', label:'ชื่อผู้ส่งผลงาน', hint:'', type:'text'},{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
+  lesson_director: [{id:'title', label:'ชื่อผู้ส่งผลงาน', hint:'', type:'text'},{id:'url1', label:'ลิงก์ผลงาน', hint:'วาง URL จาก Google Drive ที่แชร์แบบ "ทุกคนที่มีลิงก์"', type:'link'}],
   film: [
     {id:'title', label:'ชื่อภาพยนตร์', hint:'', type:'text'},
     {id:'url1', label:'ลิงก์โฟลเดอร์ Google Drive', hint:'ประกอบด้วย: ใบสมัคร, แบบรายงาน, โปสเตอร์', type:'link'},
@@ -887,14 +887,14 @@ function renderByActivityTab() {
   ];
   const filterBtns = ACT_OPTIONS.map(o =>
     `<button class="act-filter-btn ${window.adminActFilter===o.key?'active':''}"
-      onclick="window.adminActFilter='${o.key}';switchAdminTab('byactivity',null)">${o.label}</button>`
+      onclick="window.adminActFilter='${o.key}';document.querySelectorAll('#byactivityFilterBtns .act-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('actTableWrap').innerHTML=renderActTable()">${o.label}</button>`
   ).join('');
   return `
     <div class="admin-search-bar">
       <input type="text" placeholder="🔍 ค้นหาชื่อหรือรหัสโรงเรียน..." value="${window.adminSearch}"
         oninput="window.adminSearch=this.value;document.getElementById('actTableWrap').innerHTML=renderActTable()">
     </div>
-    <div class="act-filter">${filterBtns}</div>
+    <div class="act-filter" id="byactivityFilterBtns">${filterBtns}</div>
     <div id="actTableWrap">${renderActTable()}</div>`;
 }
 
@@ -1167,11 +1167,11 @@ let scoresActFilter = ACT_KEYS[0];
 function renderScoresTab() {
   const filterBtns = ACT_KEYS.map(k =>
     `<button class="act-filter-btn ${scoresActFilter===k?'active':''}"
-      onclick="scoresActFilter='${k}';switchAdminTab('scores',null)">${ACT_KEY_LABELS[k]}</button>`
+      onclick="scoresActFilter='${k}';document.querySelectorAll('#scoresFilterBtns .act-filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('scoresContent').innerHTML=renderScoresTable()">${ACT_KEY_LABELS[k]}</button>`
   ).join('');
 
   return `
-    <div class="act-filter" style="margin-bottom:16px">${filterBtns}</div>
+    <div class="act-filter" id="scoresFilterBtns" style="margin-bottom:16px">${filterBtns}</div>
     <div id="scoresContent">${renderScoresTable()}</div>`;
 }
 
@@ -1259,24 +1259,24 @@ function renderResultsPage() {
   const sections = ACT_KEYS.map(actKey => {
     const ranked = getRanked(actKey);
     if (!ranked.length) return '';
-    const hasTitle = ['film_primary','film_secondary','photo_primary','photo_secondary'].includes(actKey);
+    const hasTitle = ['film_primary','film_secondary','photo_primary','photo_secondary','lesson_teacher','lesson_director'].includes(actKey);
     const rows = ranked.map((r, i) => {
       const sub = all[r.code]?.[actKey];
-      const titleText = hasTitle && sub?.title ? `<div style="font-size:12px;color:var(--slate-light);margin-top:1px">"${sub.title}"</div>` : '';
+      const titleText = hasTitle && sub?.title ? `<div style="font-size:14px;color:var(--slate-light);margin-top:2px">${sub.title}</div>` : '';
       const reward = getRewardLabel(i);
       const bgColor = i===0?'#FEF9E7':i===1?'#F8F9FA':i===2?'#FDF5E6':'#FAFAFA';
-      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:${bgColor};border-radius:8px;margin-bottom:6px">
-        <div style="font-size:22px">${reward.split(' ')[0]}</div>
+      return `<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:${bgColor};border-radius:10px;margin-bottom:8px">
+        <div style="font-size:28px;flex-shrink:0">${reward.split(' ')[0]}</div>
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:var(--navy)">${r.name}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--navy)">${r.name}</div>
           ${titleText}
         </div>
-        <div style="font-size:12px;color:var(--slate-light);white-space:nowrap">${reward.replace(/^[^\s]+\s/,'')}</div>
+        <div style="font-size:13px;color:var(--slate-light);white-space:nowrap;text-align:right">${reward.replace(/^[^\s]+\s/,'')}</div>
       </div>`;
     }).join('');
 
-    return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:20px">
-      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--gold)">${ACT_KEY_LABELS[actKey]}</h3>
+    return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-bottom:20px">
+      <h3 style="font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid var(--gold)">${ACT_KEY_LABELS[actKey]}</h3>
       ${rows}
     </div>`;
   }).join('');
