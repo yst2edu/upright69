@@ -265,7 +265,7 @@
 <!-- MENU -->
 <div class="page" id="page-menu">
   <div class="school-bar">
-    <div><div class="name" id="menuSchoolName"></div><div class="code" id="menuSchoolCode"></div></div>
+    <div><div class="name" id="menuSchoolName"></div></div>
     <button class="logout-btn" onclick="doLogout()">ออกจากระบบ</button>
   </div>
   <div class="system-closed-banner" id="menuClosedBanner">⚠️ ระบบปิดรับผลงานแล้ว — ท่านสามารถดูผลงานที่ส่งไปแล้วได้เท่านั้น</div>
@@ -288,10 +288,14 @@
       <button class="level-tab" onclick="selectLevel('secondary',this)">🎓 ระดับมัธยมศึกษา (ขยายโอกาส)</button>
     </div>
     <div class="success-banner" id="formSuccess">✅ บันทึกผลงานเรียบร้อยแล้ว</div>
+    <div class="success-banner" id="formCancelSuccess" style="background:#FEF2F2;border-color:#FECACA;color:var(--red)">🗑️ ยกเลิกการส่งผลงานแล้ว</div>
     <div class="error-msg" id="formError"></div>
     <div id="urlFields"></div>
     <button class="btn-primary btn-block" id="submitBtn" onclick="submitForm()" style="border-radius:8px;margin-top:8px;">💾 บันทึกผลงาน</button>
-    <p style="font-size:11px;color:#9CA3AF;text-align:center;margin-top:12px;">สามารถกลับมาแก้ไขได้จนกว่าแอดมินจะปิดระบบ</p>
+    <div id="cancelSubmitWrap" style="display:none;text-align:center;margin-top:10px">
+      <button onclick="cancelSubmission()" style="background:none;border:none;color:var(--red);font-size:13px;font-family:'Sarabun',sans-serif;cursor:pointer;text-decoration:underline">🗑️ ยกเลิกการส่งผลงานนี้</button>
+    </div>
+    <p style="font-size:11px;color:#9CA3AF;text-align:center;margin-top:10px;">สามารถกลับมาแก้ไขได้จนกว่าแอดมินจะปิดระบบ</p>
   </div>
 </div>
 
@@ -495,7 +499,6 @@ function doLogout() {
 function renderMenu() {
   const s = loadSettings();
   document.getElementById('menuSchoolName').textContent = SCHOOLS[currentSchoolCode];
-  document.getElementById('menuSchoolCode').textContent = 'รหัส ' + currentSchoolCode;
   document.getElementById('menuClosedBanner').classList.toggle('show', !s.systemOpen);
 
   const grid = document.getElementById('activityGrid');
@@ -558,12 +561,54 @@ function openForm(act) {
     tabs.querySelectorAll('.level-tab').forEach((t,i) => t.classList.toggle('active',i===0));
   } else { tabs.style.display = 'none'; }
   document.getElementById('formSuccess').classList.remove('show');
+  document.getElementById('formCancelSuccess').classList.remove('show');
   document.getElementById('formError').classList.remove('show');
   const s = loadSettings();
   const btn = document.getElementById('submitBtn');
   btn.disabled = !s.systemOpen;
   btn.style.opacity = s.systemOpen ? '1' : '0.5';
   renderUrlFields();
+  updateCancelBtn();
+  goTo('page-form');
+}
+
+function updateCancelBtn() {
+  const act = currentActivity;
+  if (!act) return;
+  const level = act.hasLevel ? currentLevel : null;
+  const existing = getSubmission(currentSchoolCode, act.id, level);
+  const s = loadSettings();
+  const wrap = document.getElementById('cancelSubmitWrap');
+  if (wrap) wrap.style.display = (existing && s.systemOpen) ? 'block' : 'none';
+}
+
+async function cancelSubmission() {
+  if (!confirm('ยืนยันยกเลิกการส่งผลงานนี้? ข้อมูลจะถูกลบ')) return;
+  const act = currentActivity;
+  const level = act.hasLevel ? currentLevel : null;
+  const key = level ? `${act.id}_${level}` : act.id;
+
+  // ลบจาก cache
+  if (window._submissionsCache?.[currentSchoolCode]?.[key]) {
+    delete window._submissionsCache[currentSchoolCode][key];
+  }
+  // ลบจาก Firestore
+  try {
+    const ref = db.collection('submissions').doc(currentSchoolCode);
+    const snap = await ref.get();
+    if (snap.exists) {
+      const data = snap.data();
+      delete data[key];
+      await ref.set(data);
+    }
+  } catch(e) { console.error(e); }
+
+  document.getElementById('formCancelSuccess').classList.add('show');
+  setTimeout(() => document.getElementById('formCancelSuccess').classList.remove('show'), 3000);
+  document.getElementById('cancelSubmitWrap').style.display = 'none';
+  renderUrlFields();
+  renderSummary();
+  renderMenu();
   goTo('page-form');
 }
 
@@ -572,8 +617,10 @@ function selectLevel(level, btn) {
   document.querySelectorAll('.level-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('formSuccess').classList.remove('show');
+  document.getElementById('formCancelSuccess').classList.remove('show');
   document.getElementById('formError').classList.remove('show');
   renderUrlFields();
+  updateCancelBtn();
 }
 
 function renderUrlFields() {
@@ -644,13 +691,11 @@ function submitForm() {
   setSubmission(currentSchoolCode, act.id, level, values);
   sucEl.classList.add('show');
   setTimeout(() => sucEl.classList.remove('show'), 3000);
-  // อัปเดต summary ทันที
   renderSummary();
-  // อัปเดต grid dots
   renderMenu();
-  // กลับไปแสดง form อยู่
   goTo('page-form');
   renderUrlFields();
+  updateCancelBtn();
 }
 
 // ===== ADMIN =====
@@ -1145,7 +1190,6 @@ function renderSubmissionListPage() {
       `<div style="display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--cream-dark)">
         <span style="font-size:13px;color:var(--slate-light);min-width:24px">${i+1}.</span>
         <span style="font-size:14px;font-weight:600;color:var(--navy)">${name}</span>
-        <span style="font-size:11px;color:var(--slate-light);margin-left:auto">${code}</span>
       </div>`
     ).join('');
     return `<div style="background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden">
@@ -1670,7 +1714,7 @@ function renderJudgePage() {
           <div style="width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${i+1}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:14px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-            <div style="font-size:11px;color:var(--slate-light)">${code} • ส่งเมื่อ ${dateStr}</div>
+            <div style="font-size:11px;color:var(--slate-light)">ส่งเมื่อ ${dateStr}</div>
           </div>
           <span id="judgeArrow${i}" style="font-size:20px;color:var(--slate-light);transition:transform .2s;flex-shrink:0;line-height:1">›</span>
         </div>
