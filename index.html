@@ -658,6 +658,21 @@ async function doAdminLogin() {
   const u = document.getElementById('adminUser').value.trim();
   const p = document.getElementById('adminPass').value;
   const errEl = document.getElementById('adminLoginError');
+
+  // ตรวจว่ามี hash ใน Firestore ไหม ถ้ายังไม่มีให้ setup ครั้งแรก
+  const auth = await getAdminHash();
+  if (!auth) {
+    // ครั้งแรก: hash รหัสที่กรอกแล้วบันทึกเป็น admin
+    if (!u || !p) { errEl.classList.add('show'); return; }
+    const confirmed = confirm(`ตั้งค่า username "${u}" และรหัสผ่านนี้เป็นผู้ดูแลระบบครั้งแรก ยืนยัน?`);
+    if (!confirmed) return;
+    await saveAdminAuth(u, p);
+    errEl.classList.remove('show');
+    saveSession('admin', null);
+    renderAdmin(); goTo('page-admin');
+    return;
+  }
+
   const ok = await verifyAdminLogin(u, p);
   if (ok) {
     errEl.classList.remove('show');
@@ -1162,7 +1177,8 @@ async function changeAdminPassword() {
   if (nw.length < 6) return showMsg('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร', 'var(--red)');
   if (!(await verifyAdminPassword(cur))) return showMsg('รหัสผ่านปัจจุบันไม่ถูกต้อง', 'var(--red)');
 
-  await saveAdminAuth('yst2', nw);
+  const auth = await getAdminHash();
+  await saveAdminAuth(auth?.username || 'yst2', nw);
   document.getElementById('adminCurrentPw').value = '';
   document.getElementById('adminNewPw').value = '';
   document.getElementById('adminNewPw2').value = '';
@@ -1219,17 +1235,14 @@ async function getAdminHash() {
 
 async function verifyAdminPassword(pw) {
   const auth = await getAdminHash();
-  if (!auth) {
-    // ยังไม่มี hash ใน Firestore → fallback ชั่วคราว (จะถูกแทนที่ตอน init)
-    return pw === '35020000';
-  }
+  if (!auth) return false;
   const hash = await sha256(pw);
-  return hash === auth.hash && (auth.username || 'yst2') === 'yst2';
+  return hash === auth.hash;
 }
 
 async function verifyAdminLogin(username, pw) {
   const auth = await getAdminHash();
-  if (!auth) return username === 'yst2' && pw === '35020000';
+  if (!auth) return false;
   const hash = await sha256(pw);
   return hash === auth.hash && username === (auth.username || 'yst2');
 }
@@ -1240,11 +1253,8 @@ async function saveAdminAuth(username, pw) {
 }
 
 async function ensureAdminHashExists() {
-  const auth = await getAdminHash();
-  if (!auth) {
-    // สร้าง hash จาก default password ครั้งแรก
-    await saveAdminAuth('yst2', '35020000');
-  }
+  // ไม่มี default credentials ในโค้ด
+  // ถ้าครั้งแรกยังไม่มี hash ใน Firestore ให้ใช้ generateAdminHash() จากหน้า setup
 }
 
 // ===== FIREBASE (compat mode) =====
