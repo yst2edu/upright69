@@ -592,14 +592,19 @@ async function cancelSubmission() {
   if (window._submissionsCache?.[currentSchoolCode]?.[key]) {
     delete window._submissionsCache[currentSchoolCode][key];
   }
-  // ลบจาก Firestore
+  // ลบจาก Firestore — ถ้าไม่มีกิจกรรมเหลือให้ลบ doc ทิ้งเลย
   try {
     const ref = db.collection('submissions').doc(currentSchoolCode);
     const snap = await ref.get();
     if (snap.exists) {
       const data = snap.data();
       delete data[key];
-      await ref.set(data);
+      if (Object.keys(data).length === 0) {
+        await ref.delete();
+        delete window._submissionsCache[currentSchoolCode];
+      } else {
+        await ref.set(data);
+      }
     }
   } catch(e) { console.error(e); }
 
@@ -738,7 +743,9 @@ function renderAdmin() {
 }
 
 function renderAdminStats() {
-  const all = loadSubmissions();
+  const allRaw = loadSubmissions();
+  // กรอง doc ที่ว่างออก (โรงเรียนยกเลิกทุกกิจกรรม)
+  const all = Object.fromEntries(Object.entries(allRaw).filter(([,v]) => Object.keys(v).length > 0));
   const schoolsSubmitted = Object.keys(all).length;
   const totalSchools = Object.keys(SCHOOLS).length;
   let totalEntries = 0;
@@ -907,7 +914,8 @@ function renderBySchoolTab() {
 }
 
 function renderSchoolRows() {
-  const all = loadSubmissions();
+  const allRaw = loadSubmissions();
+  const all = Object.fromEntries(Object.entries(allRaw).filter(([,v]) => Object.keys(v).length > 0));
   const q = window.adminSearch.toLowerCase();
 
   let filtered = Object.entries(SCHOOLS).filter(([code,name]) =>
